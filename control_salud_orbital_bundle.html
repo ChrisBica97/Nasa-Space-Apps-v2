@@ -102,11 +102,12 @@ html.lock{overflow:hidden}#drawer[inert]{visibility:hidden;transition:transform 
 <label class="ctl">Día <b id="dd" class="mono" style="color:var(--tx);min-width:28px"></b><input type="range" id="day" min="0" max="300" aria-label="Día de misión"></label>
 <button class="btn" id="log">+ Registro diario</button></header>
 <div id="scrim"></div>
-<div class="app"><aside id="drawer" class="g" aria-label="Menú de navegación"><div class="dh"><b class="mono">NAVEGACIÓN</b><button class="ib" id="dx" aria-label="Cerrar menú">✕</button></div><div class="mono sec">TRIPULACIÓN</div><div id="crew"></div><div class="mono sec">SECCIONES</div><nav id="nav" aria-label="Secciones de evaluación"></nav><div class="mono sec">SIMULACIÓN</div>
+<aside id="drawer" class="g" inert aria-label="Menú de navegación"><div class="dh"><b class="mono">NAVEGACIÓN</b><button class="ib" id="dx" aria-label="Cerrar menú">✕</button></div><div class="mono sec">TRIPULACIÓN</div><div id="crew"></div><div class="mono sec">SECCIONES</div><nav id="nav" aria-label="Secciones de evaluación"></nav><div class="mono sec">SIMULACIÓN</div>
 <label class="ctl" style="display:grid;margin-top:12px">Entorno de misión<select id="env2"></select></label>
 <p id="envnote" style="font-size:12px;color:var(--mu)"></p>
 <label class="ctl" style="display:grid;margin-top:8px">Cumplimiento de ejercicio <b id="adho" class="mono" style="color:var(--tx)"></b><input type="range" id="adh" min="0" max="100" step="5" style="width:100%"></label>
 <label class="ctl" style="display:grid;margin-top:12px">Dolor lumbar (0 a 10) <b id="vaso" class="mono" style="color:var(--tx)"></b><input type="range" id="vas" min="0" max="10" step="1" style="width:100%"></label></aside>
+<div class="app">
 <main class="main" style="display:grid;gap:12px"><section class="g hero" id="hero"></section>
 <div class="rw"><button class="ib" data-r="tabs" data-d="-1" aria-label="Anterior">‹</button><div class="rail" id="tabs"></div><button class="ib" data-r="tabs" data-d="1" aria-label="Siguiente">›</button></div>
 <div class="stage" id="stage"></div></main></div>
@@ -523,10 +524,10 @@ menu(){const cur=MENU.find(g=>g.tab===S.tab);if(cur&&this.exFor!==S.tab){this.ex
  if(h!==this.mh){$("nav").innerHTML=h;this.mh=h}},
 /* ---- drawer ---- */
 get isOpen(){return $("drawer").classList.contains("open")},
-open(){const d=$("drawer");this.menu();d.inert=false;d.classList.add("open");$("scrim").classList.add("on");$("hb").setAttribute("aria-expanded","true");document.documentElement.classList.add("lock");
+open(){const d=$("drawer");this.menu();d.removeAttribute("inert");d.classList.add("open");$("scrim").classList.add("on");$("hb").setAttribute("aria-expanded","true");document.documentElement.classList.add("lock");
  this.rf=document.activeElement;const on=d.querySelector(".nl.on"),f=on||d.querySelector("button");f&&f.focus({preventScroll:true});on&&on.scrollIntoView({block:"center"})},
-close(){if(!this.isOpen)return;const d=$("drawer");d.classList.remove("open");d.inert=true;$("scrim").classList.remove("on");$("hb").setAttribute("aria-expanded","false");document.documentElement.classList.remove("lock");(this.rf||$("hb")).focus({preventScroll:true})},
-start(){this.tree=this.build();$("drawer").inert=true;
+close(){if(!this.isOpen)return;const d=$("drawer");d.classList.remove("open");d.setAttribute("inert","");$("scrim").classList.remove("on");$("hb").setAttribute("aria-expanded","false");document.documentElement.classList.remove("lock");(this.rf||$("hb")).focus({preventScroll:true})},
+start(){this.tree=this.build();$("drawer").setAttribute("inert","");
  $("drawer").addEventListener("click",e=>{const g=e.target.closest("[data-ng]"),n=e.target.closest("[data-nav]");
   if(g){const s=g.parentElement,o=!s.classList.contains("open");s.classList.toggle("open",o);g.setAttribute("aria-expanded",o);o?this.ex.add(g.dataset.ng):this.ex.delete(g.dataset.ng)}
   else if(n){const l=this.leaves[+n.dataset.nav];this.close();this.go({tab:l.t,z:l.z,p:l.p,a:l.a,...l.x})}});
