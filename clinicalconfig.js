@@ -1,9 +1,9 @@
 /* clinicalconfig.js — toda la configuración clínica. Agregar tripulantes, zonas o parámetros = añadir un objeto. */
 "use strict";
 const CREW=[
-{id:"c1",name:"Cmdr. Alex Vance",role:"Comandante",bio:"Especialista EVA · 42 años · 1,82 m · 78 kg",age:42,sens:1,col:"#7fb2ff"},
-{id:"c2",name:"Dra. Elena Rostova",role:"Médico de vuelo",bio:"Biología espacial · 38 años · 1,68 m · 62 kg",age:38,sens:1.12,col:"#ff8ad8"},
-{id:"c3",name:"Ing. Marcus Chen",role:"Ing. de sistemas",bio:"Robótica y soporte · 35 años · 1,75 m · 70 kg",age:35,sens:.9,col:"#ffd23f"}];
+{id:"c1",name:"Juli Diaz",role:"Comandante",bio:"Especialista EVA · 28 años · 1,62 m · 57 kg",age:42,sens:1,col:"#7fb2ff"},
+{id:"c2",name:"Mariana Bazán",role:"Médico de vuelo",bio:"Biología espacial · 38 años · 1,68 m · 62 kg",age:38,sens:1.12,col:"#ff8ad8"},
+{id:"c3",name:"Pablo Gómez",role:"Ing. de sistemas",bio:"Robótica y soporte · 35 años · 1,75 m · 70 kg",age:35,sens:.9,col:"#ffd23f"}];
 const ENVS={iss:{n:"Estación Espacial (microgravedad)",k:1,fk:1,gz:1,lat:"0,3 s",note:"Órbita baja: microgravedad total, 16 amaneceres al día y comunicación casi inmediata con Tierra."},
 mars:{n:"Tránsito a Marte (espacio profundo)",k:1.1,fk:1,gz:1,lat:"hasta 22 min",note:"Más radiación y retraso de comunicación: el tripulante debe autoevaluarse con autonomía."},
 moon:{n:"Base lunar Artemis (1/6 g)",k:.5,fk:.3,gz:.2,lat:"1,3 s",note:"Gravedad parcial: la pérdida ósea y muscular es menor, pero hay polvo lunar y radiación."}};
