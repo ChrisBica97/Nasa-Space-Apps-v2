@@ -4,6 +4,9 @@ const $=id=>document.getElementById(id),esc=t=>String(t).replace(/[&<>"]/g,c=>({
 const fmt=(p,v)=>v.toFixed(p.d).replace(".",","),bd=s=>`<span class="bd t${s}">${SN[s]}</span>`;
 /* día actual de la misión: la barra solo llega hasta aquí; se avanza de a poco (ver "Días y SVG") */
 const TK="orbital_today_v1",loadToday=()=>{try{return clamp(parseInt(localStorage.getItem(TK))||30,30,300)}catch(e){return 30}};
+/* ningún parámetro admite negativos salvo T-score y Z-score */
+const NEGOK=new Set(["pie.t","pie.z"]);
+const cleanV=v=>{const o={};Object.entries(v||{}).forEach(([k,x])=>{if(typeof x==="number"&&x<0&&!NEGOK.has(k))return;o[k]=x});return o};
 const S={crew:"c1",env:"iss",day:30,today:loadToday(),tab:"panel",sel:{},par:{},cat:"all",cmp:0,rl:"huesos",cc:{}};
 CREW.forEach(c=>S.cc[c.id]={adh:40,vas:3});
 const cfg=(id=S.crew)=>S.cc[id],crewOf=(id=S.crew)=>CREW.find(x=>x.id===id),layer=()=>S.tab==="registro"?S.rl:S.tab;
@@ -14,9 +17,9 @@ const refText=p=>p.dir==="none"?"Sin umbral definido":`Base ${fmt(p,p.base)} · 
 const SC=["#2ee6a6","#ffb547","#ff6b6b","#6d788f"];
 /* ---------- StorageManager ---------- */
 const Store={K:"orbital_logs_v4",ver:0,_r:null,_o:{},all(){try{const r=localStorage.getItem(this.K)||"{}";if(r!==this._r){this._o=JSON.parse(r);this._r=r}return this._o}catch(e){return{}}},days(c){return this.all()[c]||{}},get(c,d){return this.days(c)[d]},
-put(c,d,patch){try{const a=this.all(),r=(a[c]=a[c]||{})[d]=a[c][d]||{v:{},t:{}};Object.assign(r.v,patch.v||{});Object.assign(r.t,patch.t||{});if(patch.n!=null)r.n=patch.n;(localStorage.setItem(this.K,JSON.stringify(a)),Store.ver++)}catch(e){}},
+put(c,d,patch){try{const a=this.all(),r=(a[c]=a[c]||{})[d]=a[c][d]||{v:{},t:{}};Object.assign(r.v,cleanV(patch.v));Object.assign(r.t,patch.t||{});if(patch.n!=null)r.n=patch.n;(localStorage.setItem(this.K,JSON.stringify(a)),Store.ver++)}catch(e){}},
 /* guarda (o reemplaza) los valores de una sola zona del cuerpo en un día; los campos vacíos se eliminan */
-setZone(c,d,zid,v,n){try{const a=this.all(),r=(a[c]=a[c]||{})[d]=a[c][d]||{v:{},t:{}};Object.keys(r.v).forEach(k=>{if(k.indexOf(zid+".")===0)delete r.v[k]});Object.assign(r.v,v);r.zn=r.zn||{};if(n)r.zn[zid]=n;else delete r.zn[zid];
+setZone(c,d,zid,v,n){try{const a=this.all(),r=(a[c]=a[c]||{})[d]=a[c][d]||{v:{},t:{}};Object.keys(r.v).forEach(k=>{if(k.indexOf(zid+".")===0)delete r.v[k]});Object.assign(r.v,cleanV(v));r.zn=r.zn||{};if(n)r.zn[zid]=n;else delete r.zn[zid];
 if(!Object.keys(r.v).length&&!Object.keys(r.t||{}).length&&!Object.keys(r.zn).length&&!r.n)delete a[c][d];(localStorage.setItem(this.K,JSON.stringify(a)),Store.ver++)}catch(e){}},
 del(c,d){try{const a=this.all();if(a[c])delete a[c][d];(localStorage.setItem(this.K,JSON.stringify(a)),Store.ver++)}catch(e){}}};
 /* ---------- PhysiologyEngine ---------- */
@@ -86,7 +89,7 @@ function regForm(z){const rec=Store.get(S.crew,S.day)||{v:{}},note=(rec.zn||{})[
 if(!has)return`<div class="rw" style="justify-content:space-between"><b>${z.n}</b>${bd(3)}</div><p style="color:var(--mu);font-size:13px">${z.txt}</p>`;
 return`<div class="rw" style="justify-content:space-between"><b>${z.n}</b>${bd(Engine.ev(z).st)}</div><p style="margin:2px 0 10px;color:var(--mu);font-size:13px">${esc(crewOf().name)} · ${z.src}</p>
 <div class="fg"><label>Día de misión<input type="number" id="fday" min="0" max="${S.today}" value="${S.day}"></label><div style="align-self:end;font-size:12px;color:var(--mu)">Deja vacío un campo para usar el modelo simulado.</div>
-${z.p.map((p,i)=>{const k=z.id+"."+p.id,v=rec.v&&rec.v[k]!=null?rec.v[k]:"",cv=v!==""?v:p.v(c),s=stat(p,cv);return`<label>${esc(p.n)} (${esc(p.u)})<input type="number" step="any" inputmode="decimal" data-f="${k}" value="${v}" placeholder="${fmt(p,p.v(c))}"><span class="rf"><span id="rs-${p.id}">${s>=0?bd(s):""}</span> ${refText(p)}</span></label>`}).join("")}
+${z.p.map((p,i)=>{const k=z.id+"."+p.id,v=rec.v&&rec.v[k]!=null?rec.v[k]:"",cv=v!==""?v:p.v(c),s=stat(p,cv);return`<label>${esc(p.n)} (${esc(p.u)})<input type="number" step="any" inputmode="decimal" data-f="${k}" ${NEGOK.has(k)?"":'min="0"'} value="${v}" placeholder="${fmt(p,p.v(c))}"><span class="rf"><span id="rs-${p.id}">${s>=0?bd(s):""}</span> ${refText(p)}</span></label>`}).join("")}
 <label class="w">Observaciones de esta zona<textarea id="zn" rows="2" placeholder="Ej.: molestia al agacharse, medición repetida…">${esc(note)}</textarea></label></div>
 <div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn o" id="zdel">Borrar esta zona del día</button><button class="btn" id="zsv">Guardar registro</button></div>`}
 function regHistory(z){if(!z.p.length)return"";const days=Store.days(S.crew),pre=z.id+".",rows=Object.entries(days).filter(([d,r])=>Object.keys(r.v||{}).some(k=>k.indexOf(pre)===0)).sort((a,b)=>b[0]-a[0]).slice(0,14),pi=Math.min(S.par[z.id]||0,z.p.length-1),pr=z.p[pi];
@@ -128,20 +131,21 @@ tip.innerHTML=`${zz.n}${f?`: <b>${fmt(f.p,f.v)} ${f.p.u}</b>`:""} · ${SN[x.st]}
 document.addEventListener("input",e=>{const i=e.target;if(!i.dataset||!i.dataset.f)return;const[zid,pid]=i.dataset.f.split("."),z=ZONES.find(q=>q.id===zid),p=z.p.find(q=>q.id===pid),el=$("rs-"+pid);if(!el)return;const v=parseFloat(i.value),x=isNaN(v)?p.v(C()):v,s=stat(p,x);el.innerHTML=s>=0?bd(s):""});
 document.addEventListener("change",e=>{if(e.target.id==="fday")State({day:clamp(Math.round(+e.target.value||0),0,S.today)})});
 function saveZone(){const z=ZONES.find(q=>q.id===S.sel[S.rl]),d=clamp(Math.round(+$("fday").value||0),0,S.today),v={};document.querySelectorAll("[data-f]").forEach(i=>{if(i.value!==""&&!isNaN(parseFloat(i.value)))v[i.dataset.f]=parseFloat(i.value)});const n=$("zn").value.trim();
+if(Object.keys(v).some(k=>v[k]<0&&!NEGOK.has(k)))return toast("No se permiten valores negativos");
 if(!Object.keys(v).length&&!n)return toast("Ingresa al menos un valor");S.day=d;Store.setZone(S.crew,d,z.id,v,n);render();toast("Registro de "+z.n.split(" (")[0]+" guardado")}
 function delZone(){const z=ZONES.find(q=>q.id===S.sel[S.rl]),d=clamp(Math.round(+$("fday").value||0),0,S.today);Store.setZone(S.crew,d,z.id,{},"");render();toast("Registro de la zona borrado")}
 const openDrawer=()=>Nav.open(),closeDrawer=()=>Nav.close();
 $("hb").onclick=openDrawer;$("scrim").onclick=closeDrawer;$("day").oninput=e=>State({day:+e.target.value});$("adh").oninput=e=>{cfg().adh=+e.target.value;render()};$("vas").oninput=e=>{cfg().vas=+e.target.value;render()};
 for(const i of["env","env2"]){$(i).innerHTML=Object.entries(ENVS).map(([k,v])=>`<option value="${k}">${v.n}</option>`).join("");$(i).onchange=e=>State({env:e.target.value})}
 $("log").onclick=()=>Nav.go({tab:"registro"});
-$("dys").onclick=()=>openDays();
+$("dys").onclick=()=>openDays();$("upl").onclick=()=>openUpload();
 /* ---------- diálogo y utilidades de pruebas ---------- */
 let TM=[];const later=(f,ms)=>TM.push(setTimeout(f,ms)),clr=()=>{TM.forEach(clearTimeout);TM=[]};
 const dlg=$("dlg");dlg.addEventListener("close",()=>{clr();render()});
 function openDlg(h){clr();$("dbody").innerHTML=h;if(!dlg.open)dlg.showModal()}
 const head=(t,s)=>`<h3 style="margin:0 0 4px">${t}</h3><p style="margin:0 0 12px;color:var(--mu);font-size:13px">${crewOf().name} · día ${S.day}. ${s||""}</p>`;
 const foot=(ok)=>`<div class="row" style="justify-content:flex-end;margin-top:14px"><button class="btn o" onclick="dlg.close()">Cerrar</button>${ok||""}</div>`;
-const num=(id,l,x="")=>`<label>${l}<input type="number" step="any" inputmode="decimal" id="${id}" ${x}></label>`;
+const num=(id,l,x="")=>`<label>${l}<input type="number" step="any" inputmode="decimal" min="0" id="${id}" ${x}></label>`;
 const V=id=>{const e=$(id);return e&&e.value!==""?parseFloat(e.value):null};
 function save(v,t,msg){Store.put(S.crew,S.day,{v,t});toast(msg||"Dato real guardado")}
 const alertBox=(c,t)=>`<div class="alert t${c}">${t}</div>`;
@@ -191,41 +195,63 @@ $("go").onclick=()=>{const g=V,r=cpetCheck({age:crewOf().age,hr:g("hr")||0,spo2:
 const m={};[["vo2","vo2"],["awe","awe"],["pw","pw"],["hrr","hrr"],["borg","borg"],["ptc","co2"]].forEach(([a,b])=>{const x=g(a);if(x!=null)m["esfuerzo."+b]=x});if(Object.keys(m).length)save(m,{cpet:{stop:r}},"Prueba guardada");
 $("res").innerHTML=r.length?alertBox(2,"<b>DETENER AHORA</b>: pasar a la Fase 6 (recuperación activa a 40 W).<br>• "+r.join("<br>• ")):alertBox(0,"Sin criterios de detención. Continuar el protocolo.")}}
 
-/* ---------- días de misión: avanzar el día actual y cargar días anteriores desde un archivo SVG ---------- */
+/* ---------- días de misión (avanzar el día actual) ---------- */
 function setToday(n){n=clamp(Math.round(+n||0),S.today,300);try{localStorage.setItem(TK,String(n))}catch(e){}State({today:n,day:n})}
+function openDays(){const t=S.today;
+ openDlg(head("Días de misión","La barra y los gráficos llegan hasta el día actual.")+
+ `<div class="alert t0">Día actual de la misión: <b>${t}</b> de 300</div>
+ <div class="row" style="margin-top:10px"><button type="button" class="btn" id="dnext" ${t>=300?"disabled":""}>Pasar al día ${Math.min(t+1,300)}</button>
+ <label class="ctl">o elegir día<input type="number" id="dgo" min="${t+1}" max="300" value="${Math.min(t+1,300)}" style="width:90px"></label><button type="button" class="btn o" id="dgob" ${t>=300?"disabled":""}>Ir</button></div>
+ <p style="color:var(--mu);font-size:12px;margin:8px 0 0">Solo se puede avanzar. Los días anteriores se completan a mano o con “Cargar archivo”.</p>`+foot());
+ $("dnext").onclick=()=>{setToday(S.today+1);openDays()};
+ $("dgob").onclick=()=>{const v=Math.round(+$("dgo").value);if(!(v>S.today&&v<=300))return toast("Elige un día posterior a "+S.today);setToday(v);openDays()}}
+/* ---------- carga de días anteriores desde SVG o CSV ---------- */
 const KNOWN=()=>{const k=new Set();ZONES.forEach(z=>z.p.forEach(p=>k.add(z.id+"."+p.id)));return k};
-/* Formato que lee: (1) <metadata>{"crew":"c1","data":{"12":{"muslo.quad":58.2}}}</metadata>
-   y/o (2) elementos con data-day, data-k y data-v (los puntos reales de los gráficos exportados ya los traen). */
+const crewRes=x=>{const t=norm(x);if(!t)return S.crew;const c=CREW.find(q=>norm(q.id)===t||norm(q.name)===t||norm(q.name.split(" ").slice(-1)[0])===t);return c?c.id:null};
+/* destino: un tripulante (filas sin tripulante van a él; las de otro se rechazan) o "all" (cada fila debe indicar su tripulante) */
+const crewFor=tg=>x=>{const t=norm(x);if(tg==="all")return t?crewRes(x):null;if(!t)return tg;return crewRes(x)===tg?tg:null};
+/* SVG: <metadata>{"crew":"c1","data":{"12":{"muslo.quad":58.2}}}</metadata> y/o elementos con data-day, data-k y data-v */
 function svgParse(txt){const doc=new DOMParser().parseFromString(txt,"image/svg+xml"),root=doc.documentElement;
  if(!root||doc.querySelector("parsererror")||root.localName!=="svg")return null;
- const rows=[],push=(c,d,k,v)=>rows.push({c,d:+d,k,v:+v});
- doc.querySelectorAll("metadata").forEach(m=>{try{const j=JSON.parse(m.textContent);Object.entries(j.data||{}).forEach(([d,o])=>Object.entries(o||{}).forEach(([k,v])=>push(j.crew,d,k,v)))}catch(e){}});
- doc.querySelectorAll("[data-k][data-v]").forEach(el=>{const dn=el.closest("[data-day]"),cn=el.closest("[data-crew]");push(cn&&cn.getAttribute("data-crew"),el.getAttribute("data-day")??(dn&&dn.getAttribute("data-day")),el.getAttribute("data-k"),el.getAttribute("data-v"))});
+ const rows=[],push=(c,d,k,v)=>rows.push({c:c||"",d:parseNum(d),k:String(k||"").trim(),v:parseNum(v)});
+ doc.querySelectorAll("metadata").forEach(m=>{try{const j=JSON.parse(m.textContent);Object.entries(j.data||{}).forEach(([d,o])=>Object.entries(o||{}).forEach(([k,v])=>push(j.crew,d,k,v)));Object.entries(j.crews||{}).forEach(([c,dd])=>Object.entries(dd||{}).forEach(([d,o])=>Object.entries(o||{}).forEach(([k,v])=>push(c,d,k,v))))}catch(e){}});
+ doc.querySelectorAll("[data-k][data-v]").forEach(el=>{const dn=el.closest("[data-day]"),cn=el.closest("[data-crew]");push(cn&&cn.getAttribute("data-crew"),el.getAttribute("data-day")!=null?el.getAttribute("data-day"):dn&&dn.getAttribute("data-day"),el.getAttribute("data-k"),el.getAttribute("data-v"))});
  return rows}
-function svgApply(rows){const known=KNOWN(),by={};let ok=0,unk=0,rng=0,bad=0;
- rows.forEach(r=>{if(!known.has(r.k)){unk++;return}if(!Number.isFinite(r.v)){bad++;return}if(!Number.isInteger(r.d)||r.d<0||r.d>=S.today){rng++;return}
-  const c=CREW.some(x=>x.id===r.c)?r.c:S.crew,key=c+"|"+r.d;(by[key]=by[key]||{c,d:r.d,v:{}}).v[r.k]=r.v;ok++});
- Object.values(by).forEach(o=>Store.put(o.c,o.d,{v:o.v}));return{ok,days:Object.keys(by).length,unk,rng,bad}}
-function svgExport(){const zs=ZONES.find(z=>z.id===S.sel[layer()])||ZONES.find(z=>z.tab==="musculos"),pr=zs.p.length?zs.p[Math.min(S.par[zs.id]||0,zs.p.length-1)]:null,data={};
- Object.entries(Store.days(S.crew)).forEach(([d,r])=>{if(+d<S.today&&r.v&&Object.keys(r.v).length)data[d]=r.v});
- const meta=`<metadata>${esc(JSON.stringify({app:"kinesoft-orbital",crew:S.crew,data}))}</metadata><desc>Formato: data = {día: {zona.parametro: valor}}. Solo se leen días anteriores al día ${S.today}. Ejemplo: {"data":{"12":{"muslo.quad":58.2}}}</desc>`;
- const ch=pr?lineChartRaw(zs,pr,{w:560,h:220}):'<svg viewBox="0 0 560 220"></svg>',
-  svg=ch.replace(/<svg /,'<svg xmlns="http://www.w3.org/2000/svg" ').replace(/<svg[^>]*>/,m=>m+meta),
-  u=URL.createObjectURL(new Blob([svg],{type:"image/svg+xml"})),l=document.createElement("a");
- l.href=u;l.download=`respaldo_${S.crew}_dia${S.today}.svg`;document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(u),1500)}
-function openDays(){const t=S.today;
- openDlg(head("Días de misión","El gráfico y la barra llegan hasta el día actual.")+
- `<div class="alert t0">Día actual de la misión: <b>${t}</b> de 300</div>
- <div class="g pn" style="margin:10px 0"><b>Avanzar</b><div class="row" style="margin-top:8px"><button class="btn" id="dnext" ${t>=300?"disabled":""}>Pasar al día ${Math.min(t+1,300)}</button>
- <label class="ctl">o elegir día<input type="number" id="dgo" min="${t+1}" max="300" value="${Math.min(t+1,300)}" style="width:90px"></label><button class="btn o" id="dgob" ${t>=300?"disabled":""}>Ir</button></div>
- <p style="color:var(--mu);font-size:12px;margin:8px 0 0">Solo se puede avanzar. Los días intermedios quedan disponibles para cargar datos o un SVG.</p></div>
- <div class="g pn"><b>Cargar días anteriores (0 a ${t-1}) desde SVG</b><p style="color:var(--mu);font-size:13px;margin:6px 0">Lee los valores del archivo y los guarda como “Dato real” de ${esc(crewOf().name)} para el control y los gráficos. Usa <code>&lt;metadata&gt;</code> con JSON o elementos con <code>data-day</code>, <code>data-k</code> y <code>data-v</code>. Los días desde el ${t} en adelante se ignoran.</p>
- <div class="row"><input type="file" id="svgf" accept=".svg,image/svg+xml"><button class="btn o sm" id="svgx">Descargar plantilla / respaldo SVG</button></div><div id="res"></div></div>`+foot());
- $("dnext").onclick=()=>{setToday(S.today+1);openDays()};
- $("dgob").onclick=()=>{const v=Math.round(+$("dgo").value);if(!(v>S.today&&v<=300))return toast("Elige un día posterior a "+S.today);setToday(v);openDays()};
- $("svgx").onclick=svgExport;
- $("svgf").onchange=async e=>{const f=e.target.files[0];if(!f)return;let rows;try{rows=svgParse(await f.text())}catch(x){rows=null}
-  if(!rows)return $("res").innerHTML=alertBox(2,"No se pudo leer el archivo: no es un SVG válido.");
-  if(!rows.length)return $("res").innerHTML=alertBox(1,"El SVG no trae datos (metadata o data-day/data-k/data-v).");
-  const r=svgApply(rows);Store.ver++;
-  $("res").innerHTML=alertBox(r.ok?0:1,`Se cargaron <b>${r.ok}</b> valores en <b>${r.days}</b> día${r.days===1?"":"s"}.`+(r.rng?`<br>${r.rng} descartados por estar fuera de 0 a ${S.today-1}.`:"")+(r.unk?`<br>${r.unk} con parámetro desconocido.`:"")+(r.bad?`<br>${r.bad} con valor no numérico.`:""))}}
+/* valida (rechaza negativos, días fuera de rango, claves o personas desconocidas), consulta el historial para contar reemplazos y guarda */
+function applyRows(rows,tg){const{good,rej}=validateRows(rows,{today:S.today,known:KNOWN(),crew:crewFor(tg),negOk:k=>NEGOK.has(k)}),by={};let over=0;
+ good.forEach(r=>{const o=by[r.c+"|"+r.d]=by[r.c+"|"+r.d]||{c:r.c,d:r.d,v:{}},pv=Store.get(r.c,r.d);if(pv&&pv.v&&pv.v[r.k]!=null&&pv.v[r.k]!==r.v)over++;o.v[r.k]=r.v});
+ Object.values(by).forEach(o=>Store.put(o.c,o.d,{v:o.v}));const per={};good.forEach(r=>per[r.c]=(per[r.c]||0)+1);return{per,ok:good.length,days:Object.keys(by).length,over,rej}}
+const impReport=(r,tg)=>{const j=r.rej,x=[[j.neg,"con valor negativo (no permitido)"],[j.rng,`con día fuera de 0 a ${S.today-1}`],[j.unk,"con parámetro desconocido"],[j.bad,"con valor no numérico"],[j.crew,tg==="all"?"sin tripulante o desconocido (con “Los 3 juntos” cada fila debe indicar su tripulante)":"de otro tripulante o desconocido (solo se cargan las filas de "+crewOf(tg).name+" o sin tripulante)"]].filter(q=>q[0]);
+ return alertBox(r.ok?(x.length?1:0):2,`Se cargaron <b>${r.ok}</b> valores en <b>${r.days}</b> día${r.days===1?"":"s"}${r.over?` (${r.over} reemplazaron valores anteriores)`:""}.`+(tg==="all"&&r.ok?"<br>"+CREW.map(c=>c.name+": "+(r.per[c.id]||0)).join(" · "):"")+x.map(q=>`<br>${q[0]} ${q[1]}.`).join(""))};
+const histHtml=c=>{const rows=Object.entries(Store.days(c)).filter(([d,r])=>r.v&&Object.keys(r.v).length).sort((a,b)=>b[0]-a[0]),tot=rows.reduce((s,[d,r])=>s+Object.keys(r.v).length,0);
+ return`<b>Historial de ${esc(crewOf(c).name)}</b> <small style="color:var(--mu)">${rows.length} día${rows.length===1?"":"s"} · ${tot} valores reales</small>`+(rows.length?`<div style="overflow-x:auto;max-height:150px;margin-top:6px"><table class="tb"><tr><th>Día</th><th>Valores</th></tr>${rows.slice(0,10).map(([d,r])=>`<tr><td>${d}</td><td>${Object.keys(r.v).length}</td></tr>`).join("")}</table></div>`:'<p style="color:var(--mu);font-size:13px;margin:6px 0 0">Sin registros reales todavía.</p>')};
+const histFor=t=>t==="all"?CREW.map(c=>histHtml(c.id)).join('<hr style="border:0;border-top:1px solid var(--line);margin:10px 0">'):histHtml(t);
+const csvCell=x=>{x=String(x);return/[",;\r\n]/.test(x)?'"'+x.replace(/"/g,'""')+'"':x};
+function download(name,type,body){const u=URL.createObjectURL(new Blob([body],{type})),l=document.createElement("a");l.href=u;l.download=name;document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(u),1500)}
+function csvExport(tg){const ids=tg==="all"?CREW.map(c=>c.id):[tg||S.crew],L=["dia,tripulante,parametro,valor"];
+ ids.forEach(cid=>Object.entries(Store.days(cid)).filter(([d])=>+d<S.today).sort((a,b)=>a[0]-b[0]).forEach(([d,r])=>Object.entries(r.v||{}).forEach(([k,v])=>L.push([d,cid,k,v].map(csvCell).join(",")))));
+ download(`respaldo_${tg==="all"?"tripulacion":tg||S.crew}_dia${S.today}.csv`,"text/csv;charset=utf-8","\uFEFF"+L.join("\r\n")+"\r\n")}
+function svgExport(tg){tg=tg||S.crew;const zs=ZONES.find(z=>z.id===S.sel[layer()])||ZONES.find(z=>z.tab==="musculos"),pr=zs.p.length?zs.p[Math.min(S.par[zs.id]||0,zs.p.length-1)]:null;const of=cid=>{const o={};Object.entries(Store.days(cid)).forEach(([d,r])=>{if(+d<S.today&&r.v&&Object.keys(r.v).length)o[d]=r.v});return o},pl=tg==="all"?{app:"kinesoft-orbital",crews:Object.fromEntries(CREW.map(c=>[c.id,of(c.id)]))}:{app:"kinesoft-orbital",crew:tg,data:of(tg)};
+ const meta=`<metadata>${esc(JSON.stringify(pl))}</metadata><desc>Formato: data = {día: {zona.parametro: valor}}. Solo se leen días anteriores al día ${S.today}.</desc>`,
+  ch=pr?lineChartRaw(zs,pr,{w:560,h:220}):'<svg viewBox="0 0 560 220"></svg>';
+ download(`respaldo_${tg==="all"?"tripulacion":tg}_dia${S.today}.svg`,"image/svg+xml",ch.replace(/<svg /,'<svg xmlns="http://www.w3.org/2000/svg" ').replace(/<svg[^>]*>/,m=>m+meta))}
+const readText=f=>f.text?f.text():new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=()=>no(new Error("no se pudo leer el archivo"));r.readAsText(f)});
+async function loadFile(f){const res=$("res");if(!f)return;res.innerHTML=alertBox(1,"Leyendo "+esc(f.name)+"…");
+ try{const txt=await readText(f),csv=/\.csv$/i.test(f.name)||/csv/.test(f.type);let rows;
+  if(csv){const tb=tableToRows(csvParse(txt));if(tb.err)return res.innerHTML=alertBox(2,esc(tb.err));rows=tb.rows}
+  else{rows=svgParse(txt);if(!rows)return res.innerHTML=alertBox(2,"El archivo no es un SVG válido. Si es una tabla, usa .csv.")}
+  if(!rows.length)return res.innerHTML=alertBox(1,"El archivo no trae datos que leer.");
+  res.innerHTML=impReport(applyRows(rows,upTarget),upTarget);$("hist").innerHTML=histFor(upTarget)
+ }catch(e){res.innerHTML=alertBox(2,"No se pudo leer el archivo: "+esc(e.message))}}
+let upTarget=S.crew;
+function openUpload(){const t=S.today;upTarget=S.crew;
+ openDlg(head("Cargar días anteriores","Archivo SVG o CSV con días de 0 a "+(t-1)+".")+
+ `<div class="row" id="ups" style="margin-bottom:10px"><b style="font-size:13px">Cargar para:</b>${CREW.map(c=>`<button type="button" class="chip ${c.id===upTarget?"on":""}" data-up="${c.id}">${esc(c.name)}</button>`).join("")}<button type="button" class="chip" data-up="all">Los 3 juntos</button></div>
+ <div class="row"><label class="btn" for="upf" style="cursor:pointer">Elegir archivo (.svg o .csv)</label><input type="file" id="upf" accept=".svg,.csv,image/svg+xml,text/csv" style="position:absolute;width:1px;height:1px;opacity:0">
+ <button type="button" class="btn o sm" id="csvx">Plantilla CSV</button><button type="button" class="btn o sm" id="svgx">Plantilla SVG</button></div>
+ <div id="drop" style="margin:10px 0;padding:14px;border:1px dashed var(--line);border-radius:12px;text-align:center;color:var(--mu);font-size:13px">o arrastra aquí el archivo</div>
+ <details><summary>Formato aceptado</summary><p><b style="color:var(--tx)">CSV</b> (acepta comas dentro de comillas, “,” o “;”, y coma decimal): <code>dia,tripulante,parametro,valor</code>, o una columna por parámetro (<code>dia,muslo.quad,muslo.rigq</code>).</p><p><b style="color:var(--tx)">SVG</b>: <code>&lt;metadata&gt;</code> con JSON o elementos con <code>data-day</code>, <code>data-k</code> y <code>data-v</code>.</p><p>Con un tripulante elegido se cargan sus filas y las que no indican tripulante; con “Los 3 juntos” cada fila debe traer su tripulante (columna <code>tripulante</code>, o <code>data-crew</code> / <code>crews</code> en el SVG).</p><p>Se rechazan valores negativos (salvo T-score y Z-score) y días desde el ${t} en adelante.</p></details>
+ <div id="res"></div><div id="hist" style="margin-top:10px">${histHtml(S.crew)}</div>`+foot());
+ $("upf").onchange=e=>{loadFile(e.target.files[0]);e.target.value=""};$("csvx").onclick=()=>csvExport(upTarget);$("svgx").onclick=()=>svgExport(upTarget);
+ $("ups").onclick=e=>{const b=e.target.closest("[data-up]");if(!b)return;upTarget=b.dataset.up;$("ups").querySelectorAll("[data-up]").forEach(x=>x.classList.toggle("on",x===b));$("hist").innerHTML=histFor(upTarget);$("res").innerHTML=""};
+ const dz=$("drop");dz.ondragover=e=>{e.preventDefault();dz.style.borderColor="var(--ac)"};dz.ondragleave=()=>dz.style.borderColor="";dz.ondrop=e=>{e.preventDefault();dz.style.borderColor="";loadFile(e.dataTransfer.files[0])}}
