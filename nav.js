@@ -55,7 +55,7 @@ on(l){if(l.t!==S.tab)return false;if(l.z)return l.z===S.sel[layer()];if(l.x&&"cm
 menu(){const cur=MENU.find(g=>g.tab===S.tab);if(cur&&this.exFor!==S.tab){this.ex.add(cur.id);this.exFor=S.tab}
  this.leaves=[];const h=this.tree.map(g=>{let w=-1;const items=g.ks.map(l=>{const i=this.leaves.push(l)-1,z=l.z&&ZONES.find(q=>q.id===l.z),s=z?Engine.ev(z).st:-1,on=this.on(l);if(s>=0&&s<3)w=Math.max(w,s);
   return`<li><button class="nl ${on?"on":""}" data-nav="${i}"${on?' aria-current="page"':""}><span>${l.n}</span>${s>=0?`<i class="t${s}" title="${SN[s]}">●</i>`:""}</button></li>`}).join(""),o=this.ex.has(g.id);
-  return`<section class="ng ${o?"open":""} ${g.tab===S.tab?"cur":""}"><button class="ngh" data-ng="${g.id}" aria-expanded="${o}"><span>${g.ic}</span><b>${g.n}</b>${w>=0?`<i class="t${w}">●</i>`:""}<em>›</em></button><ul>${items}</ul></section>`}).join("");
+  return`<section class="ng ${o?"open":""} ${g.tab===S.tab?"cur":""}"><button class="ngh" data-ng="${g.id}" aria-expanded="${o}">${g.ic?`<span>${g.ic}</span>`:""}<b>${g.n}</b>${w>=0?`<i class="t${w}">●</i>`:""}<em>›</em></button><ul>${items}</ul></section>`}).join("");
  if(h!==this.mh){$("nav").innerHTML=h;this.mh=h}},
 /* ---- drawer ---- */
 get isOpen(){return $("drawer").classList.contains("open")},
