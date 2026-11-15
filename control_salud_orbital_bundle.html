@@ -96,6 +96,11 @@ html.lock{overflow:hidden}#drawer[inert]{visibility:hidden;transition:transform 
 /* gráficos de evolución junto a la silueta e historial: tamaño contenido, centrado */
 .pn svg[role="img"]{max-width:480px;margin-inline:auto}
 @media(max-width:560px){.pn svg[role="img"]{max-width:100%}}
+/* la vista no debe ensancharse por el carrusel: una sola columna que puede encogerse */
+.view{grid-template-columns:minmax(0,1fr)}.view>*{min-width:0}
+/* carrusel de tarjetas: 4 visibles en escritorio, 5 en pantallas muy anchas; el resto con las flechas */
+@media(min-width:900px){.rail>.card{width:calc((100% - 30px)/4)}}
+@media(min-width:1280px){.rail>.card{width:calc((100% - 40px)/5)}}
 
 </style>
 </head><body>
@@ -395,7 +400,7 @@ else if(d.rl){Nav.go({tab:"registro",rl:d.rl,quiet:1})}
 else if(d.reg){const z=ZONES.find(q=>q.id===d.reg);Nav.go({tab:"registro",rl:z.tab,z:z.id})}
 else if(d.day!=null)State({day:+d.day});
 else if(d.z)Nav.pick(d.z);else if(d.p!=null)Nav.par(+d.p)
-else if(d.c){State({crew:d.c});closeDrawer()}else if(d.r)$(d.r).scrollBy({left:d.d*260,behavior:"smooth"})});
+else if(d.c){State({crew:d.c});closeDrawer()}else if(d.r){const r=$(d.r),c=r.firstElementChild;r.scrollBy({left:d.d*(c?c.offsetWidth+10:260),behavior:"smooth"})}});
 document.addEventListener("keydown",e=>{const el=e.target;if((e.key==="Enter"||e.key===" ")&&el.dataset&&(el.dataset.z||el.dataset.gz)&&!/INPUT|TEXTAREA|SELECT/.test(el.tagName)){e.preventDefault();el.click()}});
 document.addEventListener("pointermove",e=>{const z=e.target.closest&&e.target.closest("svg .z");if(!z){tip.style.display="none";return}const zz=ZONES.find(q=>q.id===z.dataset.z&&q.tab===layer());if(!zz)return;const x=Engine.ev(zz),f=x.rows[0];
 tip.innerHTML=`${zz.n}${f?`: <b>${fmt(f.p,f.v)} ${f.p.u}</b>`:""} · ${SN[x.st]}`;tip.style.display="block";tip.style.left=Math.min(e.clientX+12,innerWidth-260)+"px";tip.style.top=e.clientY+14+"px"});
