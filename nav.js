@@ -5,13 +5,13 @@ const VIEWS={panel:viewPanel,registro:viewRegistro,mente:viewTests,riesgos:viewR
 huesos:()=>viewBody("huesos"),musculos:()=>viewBody("musculos"),organos:()=>viewBody("organos")};
 /* Árbol del menú. Hoja: n=texto, z=zona, p=parámetro, a=ancla, x=estado extra. Las zonas no listadas se agregan solas. */
 const MENU=[
-{id:"panel",ic:"📈",n:"Panel y comparativas",tab:"panel",k:[{n:"Panel general de la tripulación",x:{cmp:0,cat:"all"}},{n:"Comparativas entre tripulantes",x:{cmp:1}}]},
-{id:"huesos",ic:"🦴",n:"Capa de Huesos",tab:"huesos",k:[{n:"Cráneo",z:"craneo"},{n:"Columna cervical",z:"cervical"},{n:"Columna torácica",z:"toracica"},{n:"Columna lumbar",z:"lumbar",p:"dh"},{n:"Pelvis",z:"pelvis"},{n:"Fémur",z:"femur"},{n:"Tibia",z:"tibia"},{n:"Calcáneo (QUS)",z:"pie",p:"si"}]},
-{id:"musculos",ic:"💪",n:"Capa de Músculos",tab:"musculos",k:[{n:"Cuádriceps",z:"muslo",p:"quad"},{n:"Pantorrilla",z:"pantorrilla",p:"sur"},{n:"Core",z:"core"},{n:"Brazos",z:"brazos"},{n:"Composición corporal (BIA)",z:"bia",p:"ffm"}]},
-{id:"organos",ic:"🫀",n:"Órganos y sistemas",tab:"organos",k:[{n:"Cardiovascular",z:"corazon",p:"lvef"},{n:"Cuello: yugular y carótida",z:"vasos"},{n:"Pulmonar",z:"pulmones",p:"fvc"},{n:"Neuro-ocular (SANS)",z:"cerebro",p:"onsd"},{n:"Renal",z:"rinones",p:"cal"},{n:"Metabólico",z:"higado",p:"glu"}]},
-{id:"mente",ic:"🧠",n:"Evaluaciones y pruebas",tab:"mente",k:[{n:"Sueño",z:"sueno"},{n:"Test de colores",z:"cognicion"},{n:"PVT de reacción",z:"reaccion"},{n:"Ánimo",z:"animo"},{n:"Prueba de esfuerzo (CEVIS)",z:"esfuerzo"}]},
-{id:"registro",ic:"📝",n:"Registro diario",tab:"registro",k:[{n:"Registro de huesos",x:{rl:"huesos"}},{n:"Registro de músculos",x:{rl:"musculos"}},{n:"Registro de órganos",x:{rl:"organos"}}]},
-{id:"riesgos",ic:"☄️",n:"Peligros NASA y guía clínica",tab:"riesgos",k:[{n:"Peligros NASA",a:"hz"},{n:"Guía clínica de indicadores",a:"guia"},{n:"Recursos oficiales",a:"rec"}]}];
+{id:"panel",n:"Panel y comparativas",tab:"panel",k:[{n:"Panel general de la tripulación",x:{cmp:0,cat:"all"}},{n:"Comparativas entre tripulantes",x:{cmp:1}}]},
+{id:"huesos",n:"Capa de Huesos",tab:"huesos",k:[{n:"Cráneo",z:"craneo"},{n:"Columna cervical",z:"cervical"},{n:"Columna torácica",z:"toracica"},{n:"Columna lumbar",z:"lumbar",p:"dh"},{n:"Pelvis",z:"pelvis"},{n:"Fémur",z:"femur"},{n:"Tibia",z:"tibia"},{n:"Calcáneo (QUS)",z:"pie",p:"si"}]},
+{id:"musculos",n:"Capa de Músculos",tab:"musculos",k:[{n:"Cuádriceps",z:"muslo",p:"quad"},{n:"Pantorrilla",z:"pantorrilla",p:"sur"},{n:"Core",z:"core"},{n:"Brazos",z:"brazos"},{n:"Composición corporal (BIA)",z:"bia",p:"ffm"}]},
+{id:"organos",n:"Órganos y sistemas",tab:"organos",k:[{n:"Cardiovascular",z:"corazon",p:"lvef"},{n:"Cuello: yugular y carótida",z:"vasos"},{n:"Pulmonar",z:"pulmones",p:"fvc"},{n:"Neuro-ocular (SANS)",z:"cerebro",p:"onsd"},{n:"Renal",z:"rinones",p:"cal"},{n:"Metabólico",z:"higado",p:"glu"}]},
+{id:"mente",n:"Evaluaciones y pruebas",tab:"mente",k:[{n:"Sueño",z:"sueno"},{n:"Test de colores",z:"cognicion"},{n:"PVT de reacción",z:"reaccion"},{n:"Ánimo",z:"animo"},{n:"Prueba de esfuerzo (CEVIS)",z:"esfuerzo"}]},
+{id:"registro",n:"Registro diario",tab:"registro",k:[{n:"Registro de huesos",x:{rl:"huesos"}},{n:"Registro de músculos",x:{rl:"musculos"}},{n:"Registro de órganos",x:{rl:"organos"}}]},
+{id:"riesgos",n:"Peligros NASA y guía clínica",tab:"riesgos",k:[{n:"Peligros NASA",a:"hz"},{n:"Guía clínica de indicadores",a:"guia"},{n:"Recursos oficiales",a:"rec"}]}];
 const AUTO=["huesos","musculos","organos"],RLS=["huesos","musculos","organos"],ANCH=["hz","guia","rec"];
 const RM=()=>matchMedia("(prefers-reduced-motion: reduce)").matches;
 const Nav={tree:[],leaves:[],ex:new Set(["panel"]),exFor:"",cs:"",mh:"",cur:null,sig:"",ca:"",q:0,
