@@ -24,9 +24,9 @@ summary(cr){const n=[0,0,0];ZONES.forEach(z=>{const s=this.ev(z,C(S.day,cr),cr.i
 cross(al){const g=id=>al.find(a=>a.z.id+"."+a.r.p.id===id),m=[];
 if(g("sueno.sq")&&g("cognicion.cog"))m.push("Deterioro cognitivo por déficit de sueño: siesta estratégica de 25 min y luz azul enriquecida antes de reevaluar.");
 if(g("reaccion.rt"))m.push("Fatiga neuroconductual: reevaluar o descansar 20 min antes de autorizar tareas de precisión; EVA sin habilitar si el puntaje es 4 o menos.");
-if(g("sueno.n3")&&g("muslo.quad"))m.push("Sueño profundo reducido con atrofia: bajar 15–20 % el volumen de ARED pesado ese día para evitar fracturas por fatiga.");
+
 if(g("cognicion.lat")&&(g("cognicion.lap")||g("esfuerzo.co2")))m.push("Posible hipercapnia de cabina: revisar los depuradores de CO₂ antes de atribuirlo a fatiga del tripulante.");
-if(g("sueno.waso")&&g("esfuerzo.co2"))m.push("Bolsa nocturna de CO₂: subir la velocidad de los ventiladores del compartimento de descanso.");return m},
+return m},
 gam(cr=crewOf()){const days=Store.days(cr.id);let xp=0,tests=0,cog=0,rs=0;Object.values(days).forEach(r=>{xp+=Object.keys(r.v||{}).length*5+Object.keys(r.t||{}).length*20;tests+=Object.keys(r.t||{}).length;cog=Math.max(cog,(r.v||{})["cognicion.cog"]||0);rs=Math.max(rs,(r.v||{})["reaccion.rs"]||0)});
 let st=0;for(let d=S.day;d>=0&&days[d];d--)st++;
 const b=[["🚀","Primer registro",xp>0],["🔥","Racha de 3 días",st>=3],["🧠","Cerebro de acero (≥ 85)",cog>=85],["⚡","Reflejos (≥ 8)",rs>=8],["🏅","5 pruebas completadas",tests>=5]];return{xp,lv:Math.floor(xp/100)+1,pct:xp%100,st,b}}};
@@ -144,14 +144,14 @@ function save(v,t,msg){Store.put(S.crew,S.day,{v,t});toast(msg||"Dato real guard
 const alertBox=(c,t)=>`<div class="alert t${c}">${t}</div>`;
 function openTest(id){({sueno:tSleep,cognicion:tColors,reaccion:tPVT,animo:tMood,esfuerzo:tCpet})[id]()}
 /* --- sueño --- */
-function tSleep(){openDlg(head("Registro de sueño","Telemetría del anillo biométrico más autorreporte matutino de 15 segundos.")+`<div class="fg">${num("tst","Tiempo total de sueño (h)",'value="6.2"')}${num("eff","Eficiencia (%)",'value="84"')}${num("n3","Sueño profundo N3 (%)",'value="15"')}${num("rem","Sueño REM (%)",'value="20"')}${num("waso","Vigilia intra-sueño (min)",'value="25"')}${num("hrv","HRV nocturna (ms)",'value="55"')}
+function tSleep(){openDlg(head("Registro de sueño","Telemetría del anillo biométrico más autorreporte matutino de 15 segundos.")+`<div class="fg">${num("tst","Tiempo total de sueño (h)",'value="6.2"')}${num("eff","Eficiencia (%)",'value="84"')}${num("hrv","HRV nocturna (ms)",'value="55"')}
 ${[["r1","¿Qué tan descansado te sientes? (1 agotado, 5 renovado)"],["r2","Continuidad del sueño (1 fragmentado, 5 continuo)"],["r3","Claridad mental al despertar (1 somnolencia, 5 alerta máxima)"]].map(a=>`<label class="w">${a[1]}<input type="range" id="${a[0]}" min="1" max="5" value="3" style="width:100%"></label>`).join("")}</div><div id="res"></div>`+foot('<button class="btn" id="go">Calcular y guardar</button>'));
-$("go").onclick=()=>{const g=k=>V(k),s={tst:g("tst"),eff:g("eff"),n3:g("n3"),waso:g("waso")},obj=sleepObj(s),subj=clamp(Math.round((g("r1")+g("r2")+g("r3"))/3),1,5),glob=clamp(Math.round(.6*obj+.4*subj),1,5);
-save({"sueno.tst":s.tst,"sueno.eff":s.eff,"sueno.n3":s.n3,"sueno.rem":g("rem"),"sueno.waso":s.waso,"sueno.nhrv":g("hrv"),"sueno.sq":glob},{sleep:{obj,subj,glob}});
+$("go").onclick=()=>{const g=k=>V(k),s={tst:g("tst"),eff:g("eff")},obj=sleepObj(s),subj=clamp(Math.round((g("r1")+g("r2")+g("r3"))/3),1,5),glob=clamp(Math.round(.6*obj+.4*subj),1,5);
+save({"sueno.tst":s.tst,"sueno.eff":s.eff,"sueno.nhrv":g("hrv"),"sueno.sq":glob},{sleep:{obj,subj,glob}});
 let h=`<div class="alert t${glob<=2?2:glob===3?1:0}">Calidad objetiva <b>${obj}/5</b> · subjetiva <b>${subj}/5</b> · global <b>${glob}/5 — ${SLEEP_CAT[glob]}</b></div>`;
 if(Math.abs(obj-subj)>=2)h+=alertBox(1,"Discordancia objetivo-subjetiva: se prioriza el dato fisiológico y se restringen tareas de alto riesgo cognitivo.");
 if(glob<=2)h+=alertBox(2,"Calidad 2 o menor: reducir 15–20 % el volumen de ARED pesado si se repite dos noches seguidas.");
-if(s.waso>45)h+=alertBox(1,"Vigilia mayor a 45 min: revisar la ventilación del compartimento de descanso (posible bolsa de CO₂).");$("res").innerHTML=h};}
+$("res").innerHTML=h};}
 /* --- test de colores --- */
 function tColors(){const seq=[];while(seq.length<10){const i=Math.floor(Math.random()*10),n=seq.length;if(n>=2&&seq[n-1]===i&&seq[n-2]===i)continue;seq.push(i)}
 openDlg(head("Test secuencial de colores","Memoriza 10 colores y repítelos en el mismo orden. Dura menos de 45 s.")+`<div class="big" id="bx" style="background:#10192e">Preparado</div><div id="pad" class="sw" style="display:none">${PALETTE.map((p,i)=>`<button data-k="${i}" style="background:${p[1]}">${p[0]}</button>`).join("")}</div><div id="res"></div>`+foot('<button class="btn" id="go">Comenzar</button>'));
