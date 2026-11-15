@@ -11,11 +11,12 @@
 <label class="ctl">Día <b id="dd" class="mono" style="color:var(--tx);min-width:28px"></b><input type="range" id="day" min="0" max="300" aria-label="Día de misión"></label>
 <button class="btn" id="log">+ Registro diario</button></header>
 <div id="scrim"></div>
-<div class="app"><aside id="drawer" class="g" aria-label="Menú de navegación"><div class="dh"><b class="mono">NAVEGACIÓN</b><button class="ib" id="dx" aria-label="Cerrar menú">✕</button></div><div class="mono sec">TRIPULACIÓN</div><div id="crew"></div><div class="mono sec">SECCIONES</div><nav id="nav" aria-label="Secciones de evaluación"></nav><div class="mono sec">SIMULACIÓN</div>
+<aside id="drawer" class="g" inert aria-label="Menú de navegación"><div class="dh"><b class="mono">NAVEGACIÓN</b><button class="ib" id="dx" aria-label="Cerrar menú">✕</button></div><div class="mono sec">TRIPULACIÓN</div><div id="crew"></div><div class="mono sec">SECCIONES</div><nav id="nav" aria-label="Secciones de evaluación"></nav><div class="mono sec">SIMULACIÓN</div>
 <label class="ctl" style="display:grid;margin-top:12px">Entorno de misión<select id="env2"></select></label>
 <p id="envnote" style="font-size:12px;color:var(--mu)"></p>
 <label class="ctl" style="display:grid;margin-top:8px">Cumplimiento de ejercicio <b id="adho" class="mono" style="color:var(--tx)"></b><input type="range" id="adh" min="0" max="100" step="5" style="width:100%"></label>
 <label class="ctl" style="display:grid;margin-top:12px">Dolor lumbar (0 a 10) <b id="vaso" class="mono" style="color:var(--tx)"></b><input type="range" id="vas" min="0" max="10" step="1" style="width:100%"></label></aside>
+<div class="app">
 <main class="main" style="display:grid;gap:12px"><section class="g hero" id="hero"></section>
 <div class="rw"><button class="ib" data-r="tabs" data-d="-1" aria-label="Anterior">‹</button><div class="rail" id="tabs"></div><button class="ib" data-r="tabs" data-d="1" aria-label="Siguiente">›</button></div>
 <div class="stage" id="stage"></div></main></div>
