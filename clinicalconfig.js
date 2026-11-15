@@ -72,6 +72,27 @@ Z("mente","cognicion","Memoria de trabajo (test de colores)","Secuencia de 10 co
 Z("mente","reaccion","Velocidad de reacción","Tres intentos tras el cambio de rojo a verde. El puntaje de 1 a 10 habilita caminatas espaciales con 6 o más y las bloquea con 4 o menos. Las salidas en falso restan 1 punto y un intento de más de 500 ms resta 2.",[fl("rt","Tiempo medio de reacción","ms",220,1.5,"gt",260,320,0),fl("fast","Mejor intento","ms",190,1.5,"gt",230,280,0),fl("rs","Puntaje de reacción (1 a 10)","puntos",8.5,-1,"lt",6,4),ev0("fs","Salidas en falso","eventos",c=>Math.max(0,(c.d-150)/70),1,2),ev0("rl","Intentos mayores a 500 ms","eventos",c=>Math.max(0,(c.d-180)/60),1,2)],"Adaptación de la tarea de vigilancia psicomotora (PVT) de la NASA.","Neurocognitivo"),
 Z("mente","animo","Ánimo del día","Escala del 1 al 10 con etiquetas rápidas y bitácora de dos líneas. Con 3 o menos, o una caída de 4 puntos, se avisa de forma confidencial al equipo médico; 5 o 6 durante 7 días seguidos sugiere una videollamada con la familia.",[fl("mood","Puntaje de ánimo (1 a 10)","puntos",7.5,-.8,"lt",5,3)],"Autorreporte nocturno de menos de 30 s.","Emocional"),
 Z("mente","esfuerzo","Prueba de esfuerzo (CEVIS)","Ergoespirometría en cicloergómetro: modo submáximo en órbita cada 15 a 21 días (se detiene al 85 % de FC máx. o RER 1,05) y máximo antes y después del vuelo. Se detiene sola con SpO₂ menor a 90 %, PtcCO₂ mayor a 55 mmHg, presión sistólica mayor a 220 mmHg o arritmia.",[mt("vo2","VO₂máx estimado","mL/kg/min",50,-.6,"lt",45,42.5,0),mt("awe","Eficiencia aeróbica del trabajo","mL O₂/min/W",10.2,.8,"gt",11.5,12.5),mt("pw","Potencia en umbral ventilatorio","W/kg",2.6,-1,"lt",2.4,2.29),mt("hrr","Recuperación de FC al minuto","lpm",22,-1.2,"lt",18,12,0),mt("borg","Esfuerzo percibido Borg (Etapa 2)","6 a 20",12,1.5,"gt",14,17,0),fl("co2","PtcCO₂ de cabina","mmHg",38,.8,"gt",48,55,0)],"Cicloergómetro con aislamiento de vibraciones y analizador de gases respiración a respiración.","Cardiopulmonar")];
+/* límites de validez: fuera de [mn,mx] el valor se marca ALERTA. null = sin límite */
+const LIM={
+ "*.dens":[0,100],"*.load":[0,150],
+ "lumbar.disc":[9,null],"lumbar.lord":[null,60],"lumbar.vas":[0,10],
+ "pie.si":[null,110],"pie.sos":[null,1600],"pie.bua":[null,85],"pie.t":[null,1.5],"pie.z":[null,1.5],"pie.fi":[0,100],
+ "cerebro.onsd":[3,null],"vasos.ijv":[1,4],"vasos.stif":[5,null],
+ "pulmones.fvc":[null,5.5],"pulmones.fev1":[null,4.5],"pulmones.frc":[null,3],"pulmones.spo2":[null,100],"pulmones.pi":[null,10],
+ "corazon.lvef":[null,70],"corazon.lvm":[null,102],"corazon.sv":[null,100],"corazon.hr":[45,null],"corazon.hrv":[null,75],
+ "corazon.ort":[null,100],"corazon.sbp":[90,null],"corazon.dbp":[50,null],
+ "higado.glu":[70,null],"rinones.cal":[50,null],"rinones.diu":[null,4],"intestino.temp":[35,null],
+ "sueno.tst":[null,10],"sueno.eff":[null,100],"sueno.nhrv":[null,120],"sueno.sq":[null,5],
+ "cognicion.cog":[null,100],"cognicion.acc":[null,10],"cognicion.span":[null,10],"cognicion.lat":[150,null],"cognicion.itv":[100,null],
+ "reaccion.rt":[100,null],"reaccion.fast":[100,null],"reaccion.rs":[null,10],"animo.mood":[null,10],
+ "esfuerzo.vo2":[null,80],"esfuerzo.awe":[7,null],"esfuerzo.pw":[null,6],"esfuerzo.hrr":[null,60],"esfuerzo.borg":[6,20],"esfuerzo.co2":[30,null]};
+ZONES.forEach(z=>z.p.forEach(p=>{
+ if(p.dir==="none")return;
+ const l=LIM[z.id+"."+p.id]||LIM["*."+p.id];
+ if(l){p.mn=l[0];p.mx=l[1]}
+ else if(p.dir==="lt"){p.mx=p.base*1.10}          /* músculos y demás: más de +10 % sobre la base = Alerta */
+ else{p.mn=p.base>0?p.base*0.90:0}                /* "gt" sin límite propio: menos de −10 % bajo la base = Alerta */
+}));
 /* ---- configuración de pruebas (PDF) ---- */
 const MOOD=[[10,"Excelente","Con máxima energía, muy motivado y disfrutando la misión."],[9,"Muy bien","Optimista, activo y con muy buen ánimo frente a las tareas."],[8,"Bien","Tranquilo, enfocado y conforme con el trabajo del día."],[7,"Estable","Día equilibrado y normal, sin desgaste emocional."],[6,"Rutinario","Día repetitivo o en “piloto automático”, sin grandes emociones."],[5,"Plano / Aburrido","Sensación de monotonía, tedio o encierro leve."],[4,"Tenso / Nostálgico","Algo impaciente, sensible al entorno o extrañando casa."],[3,"Frustrado / Irritable","Estresado, con poca paciencia o ganas de aislarse."],[2,"Agotado","Sobrepasado por el cansancio mental o la carga de trabajo."],[1,"Muy mal","Angustia profunda, bloqueo emocional o malestar severo."]];
 const TAGS=["Calma","Motivado","Rutina","Nostalgia","Cansado","Estrés"];
