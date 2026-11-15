@@ -7,13 +7,13 @@ const CREW=[
 const ENVS={iss:{n:"Estación Espacial (microgravedad)",k:1,fk:1,gz:1,lat:"0,3 s",note:"Órbita baja: microgravedad total, 16 amaneceres al día y comunicación casi inmediata con Tierra."},
 mars:{n:"Tránsito a Marte (espacio profundo)",k:1.1,fk:1,gz:1,lat:"hasta 22 min",note:"Más radiación y retraso de comunicación: el tripulante debe autoevaluarse con autonomía."},
 moon:{n:"Base lunar Artemis (1/6 g)",k:.5,fk:.3,gz:.2,lat:"1,3 s",note:"Gravedad parcial: la pérdida ósea y muscular es menor, pero hay polvo lunar y radiación."}};
-const TABS=[{id:"panel",n:"Panel",ic:"📈",cm:""},
-{id:"huesos",n:"Huesos",ic:"🦴",cm:"Protocolo ARED: sentadilla y peso muerto, bisfosfonatos y vitamina D. El cumplimiento de ejercicio se ajusta en el menú de tripulación."},
-{id:"musculos",n:"Músculos",ic:"💪",cm:"Cicloergómetro y resistencia isoinercial (ARED) 45 min diarios."},
-{id:"organos",n:"Órganos",ic:"🫀",cm:"Control de fluidos, sodio moderado y pantalones de presión negativa (LBNP)."},
-{id:"mente",n:"Evaluaciones",ic:"🧠",cm:"Registro matutino de sueño, test de colores, reacción y ánimo; obligatorio antes de una EVA o acoplamiento."},
-{id:"registro",n:"Registro",ic:"📝",cm:""},
-{id:"riesgos",n:"Riesgos NASA",ic:"☄️",cm:""}];
+const TABS=[{id:"panel",n:"Panel",cm:""},
+{id:"huesos",n:"Huesos",cm:"Protocolo ARED: sentadilla y peso muerto, bisfosfonatos y vitamina D. El cumplimiento de ejercicio se ajusta en el menú de tripulación."},
+{id:"musculos",n:"Músculos",cm:"Cicloergómetro y resistencia isoinercial (ARED) 45 min diarios."},
+{id:"organos",n:"Órganos",cm:"Control de fluidos, sodio moderado y pantalones de presión negativa (LBNP)."},
+{id:"mente",n:"Evaluaciones",cm:"Registro matutino de sueño, test de colores, reacción y ánimo; obligatorio antes de una EVA o acoplamiento."},
+{id:"registro",n:"Registro",cm:""},
+{id:"riesgos",n:"Riesgos NASA",cm:""}];
 const SN=["Normal","Precaución","Alerta","Sin sensor"];
 /* ---- helpers de modelo fisiológico ---- */
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
