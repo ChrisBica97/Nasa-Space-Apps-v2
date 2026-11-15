@@ -21,6 +21,8 @@ const P=(id,n,u,base,v,dir,y,r,d=1,x={})=>({id,n,u,base,v,dir,y,r,d,...x});
 const dens=r=>P("dens","Densidad ósea relativa","% del basal",100,c=>100-r*c.m*c.f*c.k,"lt",97,94);
 const load=()=>P("load","Carga mecánica diaria","% de la meta",100,c=>c.d?55+45*c.adh:100,"lt",85,70,0);
 const mus=(id,n,u,b,r,ty=.05,tr=.1,d=1)=>P(id,n,u,b,c=>b*(1-r/100*c.m*c.f*c.k),"lt",b*(1-ty),b*(1-tr),d);
+/* rigidez muscular (miotonómetro): cae con la atrofia/hipotonía en microgravedad. stiff(id, nombre, base, %caída por mes) */
+const stiff=(id,n,b,r)=>mus(id,n,"N/m",b,r,.05,.1);
 const mt=(id,n,u,b,r,dir,y,rd,d=1)=>P(id,n,u,b,c=>b*(1+r/100*c.m*c.f*c.k),dir,y,rd,d);
 const fl=(id,n,u,b,r,dir,y,rd,d=1)=>P(id,n,u,b,c=>b*(1+r/100*c.m*c.fk),dir,y,rd,d);
 const ev0=(id,n,u,fn,y,r)=>P(id,n,u,0,fn,"gt",y,r,0);
@@ -41,12 +43,20 @@ Z("huesos","femur","Fémur y rótula","Es el hueso más largo y carga peso al ca
 Z("huesos","tibia","Tibia y peroné","Reciben el impacto de cada paso en la Tierra. En flotación esa carga desaparece y el hueso empieza a reabsorberse.",[dens(1.1),load()],BS),
 Z("huesos","pie","Pie y calcáneo (QUS)","El talón se mide con ultrasonido cuantitativo porque es hueso esponjoso muy activo. La velocidad y la atenuación de la onda cambian cuando las trabéculas se adelgazan.",[P("si","Índice de rigidez (SI)","índice",SI0,siF,"lt",SI0*.97,SI0*.92),P("sos","Velocidad del sonido (SOS)","m/s",1600,sosF,"lt",1576,1568,0),P("bua","Atenuación de banda ancha (BUA)","dB/MHz",85,buaF,"lt",80.75,78.2),P("t","T-score estimado","DE",0,tF,"lt",-1,-2.5),P("z","Z-score estimado","DE",.4,zF,"lt",-.5,-1),P("fi","Índice de fragilidad","0 a 100",6,fiF,"gt",25,50,0),load()],BS),
 Z("musculos","hombros","Pectoral y hombros","El deltoides y el pectoral trabajan poco sin gravedad, pero se mantienen mejor que las piernas.",[mus("delt","Espesor del deltoides","mm",28,.9),mus("pec","Espesor del pectoral mayor","mm",22,.9)],MS),
-Z("musculos","brazos","Brazos (bíceps y tríceps)","Bíceps y tríceps pierden poca masa porque se usan para desplazarse y ejercitarse.",[mus("bic","Espesor del bíceps","mm",30,.7),mus("tri","Espesor del tríceps","mm",26,.8)],MS),
+Z("musculos","brazos","Brazos (bíceps y tríceps)","Bíceps y tríceps pierden poca masa porque se usan para desplazarse y ejercitarse.",[mus("bic","Espesor del bíceps","mm",30,.7),mus("tri","Espesor del tríceps","mm",26,.8),
+// zona "brazos"
+stiff("rigb","Rigidez del bíceps braquial (miotonómetro)",12,1.5)],MS),
 Z("musculos","antebrazom","Antebrazo y mano","La fuerza de agarre se mide con dinamómetro y se compara con el valor previo al vuelo. El traje espacial agrega fatiga.",[mus("grip","Fuerza de agarre","kgf",42,.8),mus("fle","Espesor de flexores","mm",24,.6)],MS),
 Z("musculos","core","Abdomen y espalda","Los músculos que sostienen la postura trabajan menos sin gravedad y pierden tono.",[mus("rec","Espesor del recto abdominal","mm",11,2),mus("ere","Espesor de erectores espinales","mm",30,1.8)],MS),
 Z("musculos","cadera","Cadera y glúteos","El glúteo mayor es de los que más se activan al caminar en la Tierra y de los que más pierden en órbita.",[mus("glu","Espesor del glúteo mayor","mm",28,2.6)],MS),
-Z("musculos","muslo","Muslo (cuádriceps)","El cuádriceps es el gran músculo antigravitatorio. Si el área de corte baja de 60 a 52 cm² en tres meses, el software calcula el porcentaje de cambio y avisa.",[mus("quad","Área del cuádriceps (eco)","cm²",60,3.6),mus("isq","Área de isquiotibiales (eco)","cm²",34,2.6),mus("ared","Repeticiones en ARED (sentadilla, 80 kgf)","rep",15,3,.1,.2)],MS),
-Z("musculos","pantorrilla","Pantorrilla","Sóleo y gastrocnemio sostienen el cuerpo de pie y son los que más rápido se atrofian en microgravedad.",[mus("sur","Espesor del tríceps sural","mm",52,4),mus("tal","Elevación de talones (rep)","rep",25,3.5,.1,.2)],MS),
+Z("musculos","muslo","Muslo (cuádriceps)","El cuádriceps es el gran músculo antigravitatorio. Si el área de corte baja de 60 a 52 cm² en tres meses, el software calcula el porcentaje de cambio y avisa.",[mus("quad","Área del cuádriceps (eco)","cm²",60,3.6),mus("isq","Área de isquiotibiales (eco)","cm²",34,2.6),mus("ared","Repeticiones en ARED (sentadilla, 80 kgf)","rep",15,3,.1,.2),
+// zona "muslo"
+stiff("rigq","Rigidez del cuádriceps (miotonómetro)",10,2.5),
+stiff("rigi","Rigidez de isquiotibiales (miotonómetro)",11,2)],MS),
+Z("musculos","pantorrilla","Pantorrilla","Sóleo y gastrocnemio sostienen el cuerpo de pie y son los que más rápido se atrofian en microgravedad.",[mus("sur","Espesor del tríceps sural","mm",52,4),mus("tal","Elevación de talones (rep)","rep",25,3.5,.1,.2),
+// zona "pantorrilla"
+stiff("rigg","Rigidez de gemelos (miotonómetro)",12,3),
+stiff("rigs","Rigidez del sóleo (miotonómetro)",13,3)],MS),
 Z("musculos","bia","Composición corporal (BIA)","La bioimpedancia, con electrodos en manos y pies, estima la masa libre de grasa y el agua corporal total; separa pérdida muscular de cambios de líquidos.",[mus("ffm","Masa libre de grasa (BIA)","kg",62,1.1),P("tbw","Agua corporal total (BIA)","L",45,c=>45*(1-.01*c.m*c.fk),"none",0,0)],"Bioimpedancia eléctrica."),
 Z("organos","cerebro","Cerebro y ojos","En microgravedad los líquidos suben hacia la cabeza. Esto puede aumentar la presión dentro del cráneo y deformar la parte posterior del ojo. Se mide la vaina del nervio óptico con ecografía oftálmica.",[fl("onsd","Diámetro de vaina del nervio óptico","mm",4.8,3.5,"gt",5.2,5.7)],"Ecografía oftálmica volumétrica.","Neuro-ocular"),
 Z("organos","vasos","Cuello: yugular y carótida","La sangre se acumula en el cuello y la vena yugular puede estancarse, con riesgo de coágulos. Las arterias además se vuelven más rígidas.",[P("ijv","Estasis de la vena yugular","grado 1 a 4",1,c=>1+.012*c.d*c.fk,"gt",2,3),fl("stif","Rigidez carotídea","m/s",6,2,"gt",6.36,6.72,2)],"Ecografía vascular Doppler.","Cardiovascular"),
