@@ -20,11 +20,11 @@ build(){return MENU.map(g=>{const ks=g.k.map(l=>({...l,t:g.tab}));
  return{...g,ks}})},
 /* ---- render: coalescido por frame; cada parte se redibuja solo si cambió su firma ---- */
 render(){if(this.q)return;this.q=requestAnimationFrame(()=>{this.q=0;this.flush()})},
-flush(){const k=cfg(),cs=[S.crew,S.day,S.env,k.adh,k.vas,Store.ver,S.tab].join("|");
+flush(){const k=cfg(),cs=[S.crew,S.day,S.today,S.env,k.adh,k.vas,Store.ver,S.tab].join("|");
  if(cs!==this.cs){renderChrome();this.cs=cs}
  if(this.isOpen)this.menu();
  this.mount(S.tab)},
-sigNow(){const k=cfg();return[S.crew,S.day,S.env,k.adh,k.vas,Store.ver,S.cmp,S.cat,S.rl,JSON.stringify(S.sel),JSON.stringify(S.par)].join("|")},
+sigNow(){const k=cfg();return[S.crew,S.day,S.today,S.env,k.adh,k.vas,Store.ver,S.cmp,S.cat,S.rl,JSON.stringify(S.sel),JSON.stringify(S.par)].join("|")},
 mount(id){const sg=this.sigNow(),st=$("stage");if(this.cur===id&&this.sig===sg)return;
  const sw=this.cur!==id;if(sw)clr(); /* desmontar: la vista anterior desaparece del DOM */
  st.innerHTML=`<section class="view" data-view="${id}">${VIEWS[id]()}</section>`;this.cur=id;this.sig=sg;
