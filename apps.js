@@ -2,7 +2,9 @@
 "use strict";
 const $=id=>document.getElementById(id),esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const fmt=(p,v)=>v.toFixed(p.d).replace(".",","),bd=s=>`<span class="bd t${s}">${SN[s]}</span>`;
-const S={crew:"c1",env:"iss",day:60,tab:"panel",sel:{},par:{},cat:"all",cmp:0,rl:"huesos",cc:{}};
+/* día actual de la misión: la barra solo llega hasta aquí; se avanza de a poco (ver "Días y SVG") */
+const TK="orbital_today_v1",loadToday=()=>{try{return clamp(parseInt(localStorage.getItem(TK))||30,30,300)}catch(e){return 30}};
+const S={crew:"c1",env:"iss",day:30,today:loadToday(),tab:"panel",sel:{},par:{},cat:"all",cmp:0,rl:"huesos",cc:{}};
 CREW.forEach(c=>S.cc[c.id]={adh:40,vas:3});
 const cfg=(id=S.crew)=>S.cc[id],crewOf=(id=S.crew)=>CREW.find(x=>x.id===id),layer=()=>S.tab==="registro"?S.rl:S.tab;
 const stat=(p,v)=>p.dir==="none"?-1:p.dir==="lt"?(v<=p.r?2:v<=p.y?1:0):(v>=p.r?2:v>=p.y?1:0);
@@ -33,22 +35,22 @@ const b=[["🚀","Primer registro",xp>0],["🔥","Racha de 3 días",st>=3],["�
 /* ---------- gráfico de línea (modelo + datos reales + otros tripulantes) ---------- */
 let UID=0;
 function lineChartRaw(z,p,o={}){const W=o.w||340,H=o.h||170,L=o.mini?30:34,R=8,T=10,B=22,cr=crewOf(),key=z.id+"."+p.id,id="lg"+(UID++);
-const model=[];for(let d=0;d<=300;d+=5)model.push([d,p.v(C(d,cr))]);
-const real=Object.entries(Store.days(cr.id)).filter(([d,r])=>r.v&&r.v[key]!=null).map(([d,r])=>[+d,r.v[key]]).sort((a,b)=>a[0]-b[0]);
+const XM=Math.max(30,S.today),stp=Math.max(1,Math.ceil(XM/60)),model=[];for(let d=0;d<XM;d+=stp)model.push([d,p.v(C(d,cr))]);model.push([XM,p.v(C(XM,cr))]);
+const real=Object.entries(Store.days(cr.id)).filter(([d,r])=>+d<=XM&&r.v&&r.v[key]!=null).map(([d,r])=>[+d,r.v[key]]).sort((a,b)=>a[0]-b[0]);
 const others=o.cmp?CREW.filter(x=>x.id!==cr.id).map(x=>({x,pts:model.map(m=>[m[0],p.v(C(m[0],x))])})):[];
 const vals=[...model.map(a=>a[1]),...real.map(a=>a[1]),...others.flatMap(q=>q.pts.map(a=>a[1])),p.base];if(p.dir!=="none")vals.push(p.y,p.r);
-let mn=Math.min(...vals),mx=Math.max(...vals);const pad=((mx-mn)||1)*.1;const nonneg=Math.min(...vals)>=0;mn-=pad;mx+=pad;if(nonneg&&mn<0)mn=0;const sp=mx-mn,X=d=>L+d/300*(W-L-R),Y=v=>T+(1-(v-mn)/sp)*(H-T-B),cl=v=>clamp(v,mn,mx),dec=p.d||(sp<4?1:0),tk=v=>{const s=v.toFixed(dec);return(+s===0?(0).toFixed(dec):s).replace(".",",")};
+let mn=Math.min(...vals),mx=Math.max(...vals);const pad=((mx-mn)||1)*.1;const nonneg=Math.min(...vals)>=0;mn-=pad;mx+=pad;if(nonneg&&mn<0)mn=0;const sp=mx-mn,X=d=>L+d/XM*(W-L-R),Y=v=>T+(1-(v-mn)/sp)*(H-T-B),cl=v=>clamp(v,mn,mx),dec=p.d||(sp<4?1:0),tk=v=>{const s=v.toFixed(dec);return(+s===0?(0).toFixed(dec):s).replace(".",",")};
 const band=(a,b,c)=>{const y1=Y(cl(Math.max(a,b))),y2=Y(cl(Math.min(a,b)));return y2-y1>.5?`<rect x="${L}" y="${y1}" width="${W-L-R}" height="${y2-y1}" fill="${c}" opacity=".1"/>`:""};
 const bands=p.dir==="none"?"":p.dir==="lt"?band(mn,p.r,SC[2])+band(p.r,p.y,SC[1])+band(p.y,mx,SC[0]):band(mn,p.y,SC[0])+band(p.y,p.r,SC[1])+band(p.r,mx,SC[2]);
 const th=(v,c)=>p.dir==="none"&&c!=="#7fb2ff"?"":`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="${c}" stroke-opacity=".85" stroke-dasharray="4 3"/>`;
 const pl=a=>a.map(q=>X(q[0]).toFixed(1)+","+Y(q[1]).toFixed(1)).join(" ");
-const area=`M${X(0)},${Y(mn)} L${pl(model).replace(/ /g," L")} L${X(300)},${Y(mn)}Z`;
+const area=`M${X(0)},${Y(mn)} L${pl(model).replace(/ /g," L")} L${X(XM)},${Y(mn)}Z`;
 const rec=Store.get(cr.id,S.day),isReal=!!(rec&&rec.v&&rec.v[key]!=null),cv=isReal?rec.v[key]:p.v(C(S.day,cr)),cs=stat(p,cv),col=cs<0?"#7fb2ff":SC[cs];
 const grid=[mn,(mn+mx)/2,mx].map(v=>`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="#8cb4ff" stroke-opacity=".1"/><text x="${L-4}" y="${Y(v)+3}" text-anchor="end" fill="#8d9bb8" font-size="9">${tk(v)}</text>`).join("");
-const xt=[0,100,200,300].map(d=>`<line x1="${X(d)}" x2="${X(d)}" y1="${T}" y2="${H-B}" stroke="#8cb4ff" stroke-opacity=".07"/><text x="${X(d)}" y="${H-7}" text-anchor="${d===0?"start":d===300?"end":"middle"}" fill="#8d9bb8" font-size="9">${d===0?"Día 0":d}</text>`).join("");
-return`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" role="img" aria-label="Evolución de ${esc(p.n)} de ${esc(cr.name)}"><defs><linearGradient id="${id}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${cr.col}" stop-opacity=".28"/><stop offset="1" stop-color="${cr.col}" stop-opacity="0"/></linearGradient></defs>${bands}${grid}${xt}${th(p.base,"#7fb2ff")}${th(p.y,SC[1])}${th(p.r,SC[2])}<path d="${area}" fill="url(#${id})"/>${others.map(q=>`<polyline fill="none" stroke="${q.x.col}" stroke-opacity=".7" stroke-width="1.4" stroke-dasharray="3 3" points="${pl(q.pts)}"/>`).join("")}<polyline fill="none" stroke="${cr.col}" stroke-width="2.2" stroke-linejoin="round" points="${pl(model)}"/>${real.length>1?`<polyline fill="none" stroke="#fff" stroke-opacity=".9" stroke-width="1.6" points="${pl(real)}"/>`:""}${real.map(a=>`<circle cx="${X(a[0])}" cy="${Y(a[1])}" r="3.8" fill="${SC[stat(p,a[1])<0?0:stat(p,a[1])]}" stroke="#fff" stroke-width="1.2"><title>Día ${a[0]}: ${fmt(p,a[1])} ${esc(p.u)}</title></circle>`).join("")}<line x1="${X(S.day)}" x2="${X(S.day)}" y1="${T}" y2="${H-B}" stroke="#fff" stroke-opacity=".4"/><circle cx="${X(S.day)}" cy="${Y(cv)}" r="4.6" fill="${col}" stroke="#060912" stroke-width="2"/></svg>`}
+const xt=[0,Math.round(XM/3),Math.round(XM*2/3),XM].map(d=>`<line x1="${X(d)}" x2="${X(d)}" y1="${T}" y2="${H-B}" stroke="#8cb4ff" stroke-opacity=".07"/><text x="${X(d)}" y="${H-7}" text-anchor="${d===0?"start":d===XM?"end":"middle"}" fill="#8d9bb8" font-size="9">${d===0?"Día 0":d}</text>`).join("");
+return`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" role="img" aria-label="Evolución de ${esc(p.n)} de ${esc(cr.name)}"><defs><linearGradient id="${id}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${cr.col}" stop-opacity=".28"/><stop offset="1" stop-color="${cr.col}" stop-opacity="0"/></linearGradient></defs>${bands}${grid}${xt}${th(p.base,"#7fb2ff")}${th(p.y,SC[1])}${th(p.r,SC[2])}<path d="${area}" fill="url(#${id})"/>${others.map(q=>`<polyline fill="none" stroke="${q.x.col}" stroke-opacity=".7" stroke-width="1.4" stroke-dasharray="3 3" points="${pl(q.pts)}"/>`).join("")}<polyline fill="none" stroke="${cr.col}" stroke-width="2.2" stroke-linejoin="round" points="${pl(model)}"/>${real.length>1?`<polyline fill="none" stroke="#fff" stroke-opacity=".9" stroke-width="1.6" points="${pl(real)}"/>`:""}${real.map(a=>`<circle data-day="${a[0]}" data-k="${key}" data-v="${a[1]}" cx="${X(a[0])}" cy="${Y(a[1])}" r="3.8" fill="${SC[stat(p,a[1])<0?0:stat(p,a[1])]}" stroke="#fff" stroke-width="1.2"><title>Día ${a[0]}: ${fmt(p,a[1])} ${esc(p.u)}</title></circle>`).join("")}<line x1="${X(S.day)}" x2="${X(S.day)}" y1="${T}" y2="${H-B}" stroke="#fff" stroke-opacity=".4"/><circle cx="${X(S.day)}" cy="${Y(cv)}" r="4.6" fill="${col}" stroke="#060912" stroke-width="2"/></svg>`}
 const MEMO=new Map(),memo=(k,f)=>{let v=MEMO.get(k);if(v===undefined){if(MEMO.size>400)MEMO.clear();MEMO.set(k,v=f())}return v};
-const dsig=()=>{const k=cfg();return[S.crew,S.env,k.adh,k.vas,S.day,Store.ver].join("|")};
+const dsig=()=>{const k=cfg();return[S.crew,S.env,k.adh,k.vas,S.day,S.today,Store.ver].join("|")};
 /* el SVG solo se recalcula si cambia tripulante, entorno, ejercicio, dolor, día o registros */
 const lineChart=(z,p,o={})=>memo(["lc",z.id,p.id,o.w,o.h,o.mini?1:0,o.cmp?1:0,dsig()].join("|"),()=>lineChartRaw(z,p,o));
 const chart=(z,p)=>lineChart(z,p,{w:320,h:170,cmp:S.cmp});
@@ -74,7 +76,7 @@ function viewPanel(){const cr=crewOf(),items=PANEL.filter(a=>S.cat==="all"||a[2]
 const cc=CREW.map(x=>{const sm=Engine.summary(x),g=Engine.gam(x);return`<button class="cc ${x.id===S.crew?"on":""}" data-c="${x.id}" style="--cc:${x.col}" aria-pressed="${x.id===S.crew}"><div class="av" style="background:${x.col};color:#06101f">${x.name.split(" ")[1][0]}</div><div class="ci"><b>${x.name}</b><span>${x.role}</span><div class="mini">${sm.n.map((v,i)=>`<i class="t${i}">${v} ${["normal","precaución","alerta"][i]}</i>`).join("")}</div></div><div class="lv mono">Nv ${g.lv}</div></button>`}).join("");
 const grid=items.map(([zi,pi])=>{const z=ZONES.find(q=>q.id===zi),idx=z.p.findIndex(q=>q.id===pi),p=z.p[idx],r=Engine.ev(z).rows[idx],nreal=Object.values(Store.days(cr.id)).filter(q=>q.v&&q.v[zi+"."+pi]!=null).length;
 return`<article class="gc" data-gz="${zi}:${idx}" tabindex="0" role="button" aria-label="Abrir ${esc(z.n)}"><header><small>${z.n}</small><b>${p.n}</b></header><div class="gv"><span class="mono t${r.s<0?3:r.s}">${fmt(p,r.v)}</span><em>${p.u}</em>${r.s>=0?bd(r.s):""}${r.real?'<i class="src r">Dato real</i>':""}</div>${lineChart(z,p,{w:340,h:168,mini:1,cmp:S.cmp})}<footer><span>${refText(p)}</span>${nreal?`<span class="src r">${nreal} real${nreal>1?"es":""}</span>`:""}</footer></article>`}).join("");
-return`<div class="g pn"><div class="rw" style="justify-content:space-between;flex-wrap:wrap"><div><b>Selecciona un tripulante</b><p style="margin:2px 0 0;color:var(--mu);font-size:13px">Cada gráfico muestra la evolución de un estado de salud de <b style="color:var(--tx)">${cr.name}</b> a lo largo de 300 días de misión.</p></div></div><div class="ccw">${cc}</div></div>
+return`<div class="g pn"><div class="rw" style="justify-content:space-between;flex-wrap:wrap"><div><b>Selecciona un tripulante</b><p style="margin:2px 0 0;color:var(--mu);font-size:13px">Cada gráfico muestra la evolución de un estado de salud de <b style="color:var(--tx)">${cr.name}</b> desde el día 0 hasta el día ${S.today} de la misión.</p></div></div><div class="ccw">${cc}</div></div>
 <div class="g pn"><div class="rw" style="flex-wrap:wrap;gap:8px">${CATS.map(c=>`<button class="chip ${S.cat===c[0]?"on":""}" data-cat="${c[0]}">${c[1]}</button>`).join("")}<span style="flex:1"></span><button class="chip ${S.cmp?"on":""}" data-cmp="1" aria-pressed="${!!S.cmp}">Comparar con el resto de la tripulación</button></div>
 <div class="lg" style="margin-top:10px"><span style="color:${cr.col}">━ ${cr.name} (modelo)</span><span style="color:#fff">● Dato real registrado</span><span style="color:#7fb2ff">- - Base en Tierra</span><span style="color:var(--warn)">- - Precaución</span><span style="color:var(--bad)">- - Alerta</span><span>│ Día ${S.day}</span>${S.cmp?CREW.filter(x=>x.id!==cr.id).map(x=>`<span style="color:${x.col}">┅ ${x.name.split(" ").slice(-1)[0]}</span>`).join(""):""}</div></div>
 <div class="cg">${grid}</div><p style="color:var(--mu);font-size:12px;margin:0 4px">Toca un gráfico para ver la zona del cuerpo. Los puntos blancos son registros reales guardados en la pestaña Registro; la línea de color es el modelo simulado según el entorno, el cumplimiento de ejercicio y el día de misión.</p>`}
@@ -83,7 +85,7 @@ const RL=[["huesos","🦴 Huesos"],["musculos","💪 Músculos"],["organos","�
 function regForm(z){const rec=Store.get(S.crew,S.day)||{v:{}},note=(rec.zn||{})[z.id]||"",c=C(),has=z.p.length>0;
 if(!has)return`<div class="rw" style="justify-content:space-between"><b>${z.n}</b>${bd(3)}</div><p style="color:var(--mu);font-size:13px">${z.txt}</p>`;
 return`<div class="rw" style="justify-content:space-between"><b>${z.n}</b>${bd(Engine.ev(z).st)}</div><p style="margin:2px 0 10px;color:var(--mu);font-size:13px">${esc(crewOf().name)} · ${z.src}</p>
-<div class="fg"><label>Día de misión<input type="number" id="fday" min="0" max="300" value="${S.day}"></label><div style="align-self:end;font-size:12px;color:var(--mu)">Deja vacío un campo para usar el modelo simulado.</div>
+<div class="fg"><label>Día de misión<input type="number" id="fday" min="0" max="${S.today}" value="${S.day}"></label><div style="align-self:end;font-size:12px;color:var(--mu)">Deja vacío un campo para usar el modelo simulado.</div>
 ${z.p.map((p,i)=>{const k=z.id+"."+p.id,v=rec.v&&rec.v[k]!=null?rec.v[k]:"",cv=v!==""?v:p.v(c),s=stat(p,cv);return`<label>${esc(p.n)} (${esc(p.u)})<input type="number" step="any" inputmode="decimal" data-f="${k}" value="${v}" placeholder="${fmt(p,p.v(c))}"><span class="rf"><span id="rs-${p.id}">${s>=0?bd(s):""}</span> ${refText(p)}</span></label>`}).join("")}
 <label class="w">Observaciones de esta zona<textarea id="zn" rows="2" placeholder="Ej.: molestia al agacharse, medición repetida…">${esc(note)}</textarea></label></div>
 <div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn o" id="zdel">Borrar esta zona del día</button><button class="btn" id="zsv">Guardar registro</button></div>`}
@@ -97,7 +99,7 @@ return`<div class="g pn"><div class="rw" style="justify-content:space-between;fl
 <div style="display:grid;gap:12px;align-content:start"><div class="g pn" id="regform">${regForm(sel)}</div>${regHistory(sel)}</div></div>
 <div class="g pn"><b>Pruebas y autorregistros del día ${S.day}</b><p style="margin:2px 0 10px;color:var(--mu);font-size:13px">Sueño, memoria, reacción, ánimo y esfuerzo se registran con sus propias pruebas.</p><div class="rw"><button class="ib" data-r="cards" data-d="-1" aria-label="Anterior">‹</button><div class="rail" id="cards">${cards(ZONES.filter(z=>z.tab==="mente"),"",1)}</div><button class="ib" data-r="cards" data-d="1" aria-label="Siguiente">›</button></div></div>`}
 function renderChrome(){const cr=crewOf(),al=Engine.alerts(),cx=Engine.cross(al),gm=Engine.gam(),sm=Engine.summary(cr),n=sm.n,w=sm.w,k=cfg();
-$("dd").textContent=S.day;$("day").value=S.day;for(const i of["env","env2"])$(i).value=S.env;$("envnote").textContent=ENVS[S.env].note+" Latencia de comunicación: "+ENVS[S.env].lat+".";$("adh").value=k.adh;$("adho").textContent=k.adh+" %";$("vas").value=k.vas;$("vaso").textContent=k.vas;
+$("dd").textContent=S.day+" / "+S.today;$("day").max=S.today;$("day").value=S.day;for(const i of["env","env2"])$(i).value=S.env;$("envnote").textContent=ENVS[S.env].note+" Latencia de comunicación: "+ENVS[S.env].lat+".";$("adh").value=k.adh;$("adho").textContent=k.adh+" %";$("vas").value=k.vas;$("vaso").textContent=k.vas;
 $("crew").innerHTML=CREW.map(x=>`<button class="crew ${x.id===S.crew?"on":""}" data-c="${x.id}"><div class="av" style="background:${x.col};color:#06101f">${x.name.split(" ")[1][0]}</div><div><b>${x.name}</b><span>${x.role}</span></div></button>`).join("");
 $("hero").innerHTML=`<div>${bd(w)}<h2>${cr.name}</h2><p>${cr.role} · ${cr.bio}</p></div><div class="kp">${n.map((v,i)=>`<div><small>${SN[i]}</small><b class="mono t${i}">${v}</b></div>`).join("")}<div style="min-width:150px"><small>Nivel ${gm.lv} · racha ${gm.st} d</small><div class="xp"><i style="width:${gm.pct}%"></i></div><span style="font-size:18px">${gm.b.map(b=>`<span title="${b[1]}" style="opacity:${b[2]?1:.25}">${b[0]}</span>`).join(" ")}</span></div></div>
 <details style="width:100%"><summary>Alertas activas (${al.length})</summary>${al.length?al.map(a=>`<p>${bd(a.r.s)} ${a.z.n} · ${a.r.p.n}: <b class="mono">${fmt(a.r.p,a.r.v)} ${a.r.p.u}</b></p>`).join(""):"<p>Sin alertas: todos los parámetros están dentro de lo esperado.</p>"}${cx.map(t=>`<p class="t1">⚠ ${t}</p>`).join("")}</details>`;
@@ -124,14 +126,15 @@ document.addEventListener("pointermove",e=>{const z=e.target.closest&&e.target.c
 tip.innerHTML=`${zz.n}${f?`: <b>${fmt(f.p,f.v)} ${f.p.u}</b>`:""} · ${SN[x.st]}`;tip.style.display="block";tip.style.left=Math.min(e.clientX+12,innerWidth-260)+"px";tip.style.top=e.clientY+14+"px"});
 /* estado en vivo mientras se escribe en el formulario de zona */
 document.addEventListener("input",e=>{const i=e.target;if(!i.dataset||!i.dataset.f)return;const[zid,pid]=i.dataset.f.split("."),z=ZONES.find(q=>q.id===zid),p=z.p.find(q=>q.id===pid),el=$("rs-"+pid);if(!el)return;const v=parseFloat(i.value),x=isNaN(v)?p.v(C()):v,s=stat(p,x);el.innerHTML=s>=0?bd(s):""});
-document.addEventListener("change",e=>{if(e.target.id==="fday")State({day:clamp(Math.round(+e.target.value||0),0,300)})});
-function saveZone(){const z=ZONES.find(q=>q.id===S.sel[S.rl]),d=clamp(Math.round(+$("fday").value||0),0,300),v={};document.querySelectorAll("[data-f]").forEach(i=>{if(i.value!==""&&!isNaN(parseFloat(i.value)))v[i.dataset.f]=parseFloat(i.value)});const n=$("zn").value.trim();
+document.addEventListener("change",e=>{if(e.target.id==="fday")State({day:clamp(Math.round(+e.target.value||0),0,S.today)})});
+function saveZone(){const z=ZONES.find(q=>q.id===S.sel[S.rl]),d=clamp(Math.round(+$("fday").value||0),0,S.today),v={};document.querySelectorAll("[data-f]").forEach(i=>{if(i.value!==""&&!isNaN(parseFloat(i.value)))v[i.dataset.f]=parseFloat(i.value)});const n=$("zn").value.trim();
 if(!Object.keys(v).length&&!n)return toast("Ingresa al menos un valor");S.day=d;Store.setZone(S.crew,d,z.id,v,n);render();toast("Registro de "+z.n.split(" (")[0]+" guardado")}
-function delZone(){const z=ZONES.find(q=>q.id===S.sel[S.rl]),d=clamp(Math.round(+$("fday").value||0),0,300);Store.setZone(S.crew,d,z.id,{},"");render();toast("Registro de la zona borrado")}
+function delZone(){const z=ZONES.find(q=>q.id===S.sel[S.rl]),d=clamp(Math.round(+$("fday").value||0),0,S.today);Store.setZone(S.crew,d,z.id,{},"");render();toast("Registro de la zona borrado")}
 const openDrawer=()=>Nav.open(),closeDrawer=()=>Nav.close();
 $("hb").onclick=openDrawer;$("scrim").onclick=closeDrawer;$("day").oninput=e=>State({day:+e.target.value});$("adh").oninput=e=>{cfg().adh=+e.target.value;render()};$("vas").oninput=e=>{cfg().vas=+e.target.value;render()};
 for(const i of["env","env2"]){$(i).innerHTML=Object.entries(ENVS).map(([k,v])=>`<option value="${k}">${v.n}</option>`).join("");$(i).onchange=e=>State({env:e.target.value})}
 $("log").onclick=()=>Nav.go({tab:"registro"});
+$("dys").onclick=()=>openDays();
 /* ---------- diálogo y utilidades de pruebas ---------- */
 let TM=[];const later=(f,ms)=>TM.push(setTimeout(f,ms)),clr=()=>{TM.forEach(clearTimeout);TM=[]};
 const dlg=$("dlg");dlg.addEventListener("close",()=>{clr();render()});
@@ -187,3 +190,42 @@ ${num("vo2","VO₂máx estimado (mL/kg/min)")}${num("awe","Eficiencia aeróbica 
 $("go").onclick=()=>{const g=V,r=cpetCheck({age:crewOf().age,hr:g("hr")||0,spo2:g("spo2")||98,spo2b:g("spo2b")||98,ptc:g("ptc")||0,sbp:g("sbp")||0,dbp:g("dbp")||0,sbpPrev:g("sbpP"),sym:$("sym").value==="1"});
 const m={};[["vo2","vo2"],["awe","awe"],["pw","pw"],["hrr","hrr"],["borg","borg"],["ptc","co2"]].forEach(([a,b])=>{const x=g(a);if(x!=null)m["esfuerzo."+b]=x});if(Object.keys(m).length)save(m,{cpet:{stop:r}},"Prueba guardada");
 $("res").innerHTML=r.length?alertBox(2,"<b>DETENER AHORA</b>: pasar a la Fase 6 (recuperación activa a 40 W).<br>• "+r.join("<br>• ")):alertBox(0,"Sin criterios de detención. Continuar el protocolo.")}}
+
+/* ---------- días de misión: avanzar el día actual y cargar días anteriores desde un archivo SVG ---------- */
+function setToday(n){n=clamp(Math.round(+n||0),S.today,300);try{localStorage.setItem(TK,String(n))}catch(e){}State({today:n,day:n})}
+const KNOWN=()=>{const k=new Set();ZONES.forEach(z=>z.p.forEach(p=>k.add(z.id+"."+p.id)));return k};
+/* Formato que lee: (1) <metadata>{"crew":"c1","data":{"12":{"muslo.quad":58.2}}}</metadata>
+   y/o (2) elementos con data-day, data-k y data-v (los puntos reales de los gráficos exportados ya los traen). */
+function svgParse(txt){const doc=new DOMParser().parseFromString(txt,"image/svg+xml"),root=doc.documentElement;
+ if(!root||doc.querySelector("parsererror")||root.localName!=="svg")return null;
+ const rows=[],push=(c,d,k,v)=>rows.push({c,d:+d,k,v:+v});
+ doc.querySelectorAll("metadata").forEach(m=>{try{const j=JSON.parse(m.textContent);Object.entries(j.data||{}).forEach(([d,o])=>Object.entries(o||{}).forEach(([k,v])=>push(j.crew,d,k,v)))}catch(e){}});
+ doc.querySelectorAll("[data-k][data-v]").forEach(el=>{const dn=el.closest("[data-day]"),cn=el.closest("[data-crew]");push(cn&&cn.getAttribute("data-crew"),el.getAttribute("data-day")??(dn&&dn.getAttribute("data-day")),el.getAttribute("data-k"),el.getAttribute("data-v"))});
+ return rows}
+function svgApply(rows){const known=KNOWN(),by={};let ok=0,unk=0,rng=0,bad=0;
+ rows.forEach(r=>{if(!known.has(r.k)){unk++;return}if(!Number.isFinite(r.v)){bad++;return}if(!Number.isInteger(r.d)||r.d<0||r.d>=S.today){rng++;return}
+  const c=CREW.some(x=>x.id===r.c)?r.c:S.crew,key=c+"|"+r.d;(by[key]=by[key]||{c,d:r.d,v:{}}).v[r.k]=r.v;ok++});
+ Object.values(by).forEach(o=>Store.put(o.c,o.d,{v:o.v}));return{ok,days:Object.keys(by).length,unk,rng,bad}}
+function svgExport(){const zs=ZONES.find(z=>z.id===S.sel[layer()])||ZONES.find(z=>z.tab==="musculos"),pr=zs.p.length?zs.p[Math.min(S.par[zs.id]||0,zs.p.length-1)]:null,data={};
+ Object.entries(Store.days(S.crew)).forEach(([d,r])=>{if(+d<S.today&&r.v&&Object.keys(r.v).length)data[d]=r.v});
+ const meta=`<metadata>${esc(JSON.stringify({app:"kinesoft-orbital",crew:S.crew,data}))}</metadata><desc>Formato: data = {día: {zona.parametro: valor}}. Solo se leen días anteriores al día ${S.today}. Ejemplo: {"data":{"12":{"muslo.quad":58.2}}}</desc>`;
+ const ch=pr?lineChartRaw(zs,pr,{w:560,h:220}):'<svg viewBox="0 0 560 220"></svg>',
+  svg=ch.replace(/<svg /,'<svg xmlns="http://www.w3.org/2000/svg" ').replace(/<svg[^>]*>/,m=>m+meta),
+  u=URL.createObjectURL(new Blob([svg],{type:"image/svg+xml"})),l=document.createElement("a");
+ l.href=u;l.download=`respaldo_${S.crew}_dia${S.today}.svg`;document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(u),1500)}
+function openDays(){const t=S.today;
+ openDlg(head("Días de misión","El gráfico y la barra llegan hasta el día actual.")+
+ `<div class="alert t0">Día actual de la misión: <b>${t}</b> de 300</div>
+ <div class="g pn" style="margin:10px 0"><b>Avanzar</b><div class="row" style="margin-top:8px"><button class="btn" id="dnext" ${t>=300?"disabled":""}>Pasar al día ${Math.min(t+1,300)}</button>
+ <label class="ctl">o elegir día<input type="number" id="dgo" min="${t+1}" max="300" value="${Math.min(t+1,300)}" style="width:90px"></label><button class="btn o" id="dgob" ${t>=300?"disabled":""}>Ir</button></div>
+ <p style="color:var(--mu);font-size:12px;margin:8px 0 0">Solo se puede avanzar. Los días intermedios quedan disponibles para cargar datos o un SVG.</p></div>
+ <div class="g pn"><b>Cargar días anteriores (0 a ${t-1}) desde SVG</b><p style="color:var(--mu);font-size:13px;margin:6px 0">Lee los valores del archivo y los guarda como “Dato real” de ${esc(crewOf().name)} para el control y los gráficos. Usa <code>&lt;metadata&gt;</code> con JSON o elementos con <code>data-day</code>, <code>data-k</code> y <code>data-v</code>. Los días desde el ${t} en adelante se ignoran.</p>
+ <div class="row"><input type="file" id="svgf" accept=".svg,image/svg+xml"><button class="btn o sm" id="svgx">Descargar plantilla / respaldo SVG</button></div><div id="res"></div></div>`+foot());
+ $("dnext").onclick=()=>{setToday(S.today+1);openDays()};
+ $("dgob").onclick=()=>{const v=Math.round(+$("dgo").value);if(!(v>S.today&&v<=300))return toast("Elige un día posterior a "+S.today);setToday(v);openDays()};
+ $("svgx").onclick=svgExport;
+ $("svgf").onchange=async e=>{const f=e.target.files[0];if(!f)return;let rows;try{rows=svgParse(await f.text())}catch(x){rows=null}
+  if(!rows)return $("res").innerHTML=alertBox(2,"No se pudo leer el archivo: no es un SVG válido.");
+  if(!rows.length)return $("res").innerHTML=alertBox(1,"El SVG no trae datos (metadata o data-day/data-k/data-v).");
+  const r=svgApply(rows);Store.ver++;
+  $("res").innerHTML=alertBox(r.ok?0:1,`Se cargaron <b>${r.ok}</b> valores en <b>${r.days}</b> día${r.days===1?"":"s"}.`+(r.rng?`<br>${r.rng} descartados por estar fuera de 0 a ${S.today-1}.`:"")+(r.unk?`<br>${r.unk} con parámetro desconocido.`:"")+(r.bad?`<br>${r.bad} con valor no numérico.`:""))}}
