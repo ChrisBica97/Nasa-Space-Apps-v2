@@ -90,3 +90,8 @@ html.lock{overflow:hidden}#drawer[inert]{visibility:hidden;transition:transform 
 /* gráficos de evolución junto a la silueta e historial: tamaño contenido, centrado */
 .pn svg[role="img"]{max-width:480px;margin-inline:auto}
 @media(max-width:560px){.pn svg[role="img"]{max-width:100%}}
+/* la vista no debe ensancharse por el carrusel: una sola columna que puede encogerse */
+.view{grid-template-columns:minmax(0,1fr)}.view>*{min-width:0}
+/* carrusel de tarjetas: 4 visibles en escritorio, 5 en pantallas muy anchas; el resto con las flechas */
+@media(min-width:900px){.rail>.card{width:calc((100% - 30px)/4)}}
+@media(min-width:1280px){.rail>.card{width:calc((100% - 40px)/5)}}
