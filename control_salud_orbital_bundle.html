@@ -131,13 +131,13 @@ const CREW=[
 const ENVS={iss:{n:"Estación Espacial (microgravedad)",k:1,fk:1,gz:1,lat:"0,3 s",note:"Órbita baja: microgravedad total, 16 amaneceres al día y comunicación casi inmediata con Tierra."},
 mars:{n:"Tránsito a Marte (espacio profundo)",k:1.1,fk:1,gz:1,lat:"hasta 22 min",note:"Más radiación y retraso de comunicación: el tripulante debe autoevaluarse con autonomía."},
 moon:{n:"Base lunar Artemis (1/6 g)",k:.5,fk:.3,gz:.2,lat:"1,3 s",note:"Gravedad parcial: la pérdida ósea y muscular es menor, pero hay polvo lunar y radiación."}};
-const TABS=[{id:"panel",n:"Panel",ic:"📈",cm:""},
-{id:"huesos",n:"Huesos",ic:"🦴",cm:"Protocolo ARED: sentadilla y peso muerto, bisfosfonatos y vitamina D. El cumplimiento de ejercicio se ajusta en el menú de tripulación."},
-{id:"musculos",n:"Músculos",ic:"💪",cm:"Cicloergómetro y resistencia isoinercial (ARED) 45 min diarios."},
-{id:"organos",n:"Órganos",ic:"🫀",cm:"Control de fluidos, sodio moderado y pantalones de presión negativa (LBNP)."},
-{id:"mente",n:"Evaluaciones",ic:"🧠",cm:"Registro matutino de sueño, test de colores, reacción y ánimo; obligatorio antes de una EVA o acoplamiento."},
-{id:"registro",n:"Registro",ic:"📝",cm:""},
-{id:"riesgos",n:"Riesgos NASA",ic:"☄️",cm:""}];
+const TABS=[{id:"panel",n:"Panel",cm:""},
+{id:"huesos",n:"Huesos",cm:"Protocolo ARED: sentadilla y peso muerto, bisfosfonatos y vitamina D. El cumplimiento de ejercicio se ajusta en el menú de tripulación."},
+{id:"musculos",n:"Músculos",cm:"Cicloergómetro y resistencia isoinercial (ARED) 45 min diarios."},
+{id:"organos",n:"Órganos",cm:"Control de fluidos, sodio moderado y pantalones de presión negativa (LBNP)."},
+{id:"mente",n:"Evaluaciones",cm:"Registro matutino de sueño, test de colores, reacción y ánimo; obligatorio antes de una EVA o acoplamiento."},
+{id:"registro",n:"Registro",cm:""},
+{id:"riesgos",n:"Riesgos NASA",cm:""}];
 const SN=["Normal","Precaución","Alerta","Sin sensor"];
 /* ---- helpers de modelo fisiológico ---- */
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
@@ -384,7 +384,7 @@ $("dd").textContent=S.day;$("day").value=S.day;for(const i of["env","env2"])$(i)
 $("crew").innerHTML=CREW.map(x=>`<button class="crew ${x.id===S.crew?"on":""}" data-c="${x.id}"><div class="av" style="background:${x.col};color:#06101f">${x.name.split(" ")[1][0]}</div><div><b>${x.name}</b><span>${x.role}</span></div></button>`).join("");
 $("hero").innerHTML=`<div>${bd(w)}<h2>${cr.name}</h2><p>${cr.role} · ${cr.bio}</p></div><div class="kp">${n.map((v,i)=>`<div><small>${SN[i]}</small><b class="mono t${i}">${v}</b></div>`).join("")}<div style="min-width:150px"><small>Nivel ${gm.lv} · racha ${gm.st} d</small><div class="xp"><i style="width:${gm.pct}%"></i></div><span style="font-size:18px">${gm.b.map(b=>`<span title="${b[1]}" style="opacity:${b[2]?1:.25}">${b[0]}</span>`).join(" ")}</span></div></div>
 <details style="width:100%"><summary>Alertas activas (${al.length})</summary>${al.length?al.map(a=>`<p>${bd(a.r.s)} ${a.z.n} · ${a.r.p.n}: <b class="mono">${fmt(a.r.p,a.r.v)} ${a.r.p.u}</b></p>`).join(""):"<p>Sin alertas: todos los parámetros están dentro de lo esperado.</p>"}${cx.map(t=>`<p class="t1">⚠ ${t}</p>`).join("")}</details>`;
-$("tabs").innerHTML=TABS.map(t=>`<button class="tab ${t.id===S.tab?"on":""}" data-t="${t.id}">${t.ic} ${t.n}</button>`).join("");
+$("tabs").innerHTML=TABS.map(t=>`<button class="tab ${t.id===S.tab?"on":""}" data-t="${t.id}">${t.ic?t.ic+" ":""}${t.n}</button>`).join("");
 }
 function render(){Nav.render()}
 function State(p){Object.assign(S,p);Nav.render()}
@@ -479,13 +479,13 @@ const VIEWS={panel:viewPanel,registro:viewRegistro,mente:viewTests,riesgos:viewR
 huesos:()=>viewBody("huesos"),musculos:()=>viewBody("musculos"),organos:()=>viewBody("organos")};
 /* Árbol del menú. Hoja: n=texto, z=zona, p=parámetro, a=ancla, x=estado extra. Las zonas no listadas se agregan solas. */
 const MENU=[
-{id:"panel",ic:"📈",n:"Panel y comparativas",tab:"panel",k:[{n:"Panel general de la tripulación",x:{cmp:0,cat:"all"}},{n:"Comparativas entre tripulantes",x:{cmp:1}}]},
-{id:"huesos",ic:"🦴",n:"Capa de Huesos",tab:"huesos",k:[{n:"Cráneo",z:"craneo"},{n:"Columna cervical",z:"cervical"},{n:"Columna torácica",z:"toracica"},{n:"Columna lumbar",z:"lumbar",p:"dh"},{n:"Pelvis",z:"pelvis"},{n:"Fémur",z:"femur"},{n:"Tibia",z:"tibia"},{n:"Calcáneo (QUS)",z:"pie",p:"si"}]},
-{id:"musculos",ic:"💪",n:"Capa de Músculos",tab:"musculos",k:[{n:"Cuádriceps",z:"muslo",p:"quad"},{n:"Pantorrilla",z:"pantorrilla",p:"sur"},{n:"Core",z:"core"},{n:"Brazos",z:"brazos"},{n:"Composición corporal (BIA)",z:"bia",p:"ffm"}]},
-{id:"organos",ic:"🫀",n:"Órganos y sistemas",tab:"organos",k:[{n:"Cardiovascular",z:"corazon",p:"lvef"},{n:"Cuello: yugular y carótida",z:"vasos"},{n:"Pulmonar",z:"pulmones",p:"fvc"},{n:"Neuro-ocular (SANS)",z:"cerebro",p:"onsd"},{n:"Renal",z:"rinones",p:"cal"},{n:"Metabólico",z:"higado",p:"glu"}]},
-{id:"mente",ic:"🧠",n:"Evaluaciones y pruebas",tab:"mente",k:[{n:"Sueño",z:"sueno"},{n:"Test de colores",z:"cognicion"},{n:"PVT de reacción",z:"reaccion"},{n:"Ánimo",z:"animo"},{n:"Prueba de esfuerzo (CEVIS)",z:"esfuerzo"}]},
-{id:"registro",ic:"📝",n:"Registro diario",tab:"registro",k:[{n:"Registro de huesos",x:{rl:"huesos"}},{n:"Registro de músculos",x:{rl:"musculos"}},{n:"Registro de órganos",x:{rl:"organos"}}]},
-{id:"riesgos",ic:"☄️",n:"Peligros NASA y guía clínica",tab:"riesgos",k:[{n:"Peligros NASA",a:"hz"},{n:"Guía clínica de indicadores",a:"guia"},{n:"Recursos oficiales",a:"rec"}]}];
+{id:"panel",n:"Panel y comparativas",tab:"panel",k:[{n:"Panel general de la tripulación",x:{cmp:0,cat:"all"}},{n:"Comparativas entre tripulantes",x:{cmp:1}}]},
+{id:"huesos",n:"Capa de Huesos",tab:"huesos",k:[{n:"Cráneo",z:"craneo"},{n:"Columna cervical",z:"cervical"},{n:"Columna torácica",z:"toracica"},{n:"Columna lumbar",z:"lumbar",p:"dh"},{n:"Pelvis",z:"pelvis"},{n:"Fémur",z:"femur"},{n:"Tibia",z:"tibia"},{n:"Calcáneo (QUS)",z:"pie",p:"si"}]},
+{id:"musculos",n:"Capa de Músculos",tab:"musculos",k:[{n:"Cuádriceps",z:"muslo",p:"quad"},{n:"Pantorrilla",z:"pantorrilla",p:"sur"},{n:"Core",z:"core"},{n:"Brazos",z:"brazos"},{n:"Composición corporal (BIA)",z:"bia",p:"ffm"}]},
+{id:"organos",n:"Órganos y sistemas",tab:"organos",k:[{n:"Cardiovascular",z:"corazon",p:"lvef"},{n:"Cuello: yugular y carótida",z:"vasos"},{n:"Pulmonar",z:"pulmones",p:"fvc"},{n:"Neuro-ocular (SANS)",z:"cerebro",p:"onsd"},{n:"Renal",z:"rinones",p:"cal"},{n:"Metabólico",z:"higado",p:"glu"}]},
+{id:"mente",n:"Evaluaciones y pruebas",tab:"mente",k:[{n:"Sueño",z:"sueno"},{n:"Test de colores",z:"cognicion"},{n:"PVT de reacción",z:"reaccion"},{n:"Ánimo",z:"animo"},{n:"Prueba de esfuerzo (CEVIS)",z:"esfuerzo"}]},
+{id:"registro",n:"Registro diario",tab:"registro",k:[{n:"Registro de huesos",x:{rl:"huesos"}},{n:"Registro de músculos",x:{rl:"musculos"}},{n:"Registro de órganos",x:{rl:"organos"}}]},
+{id:"riesgos",n:"Peligros NASA y guía clínica",tab:"riesgos",k:[{n:"Peligros NASA",a:"hz"},{n:"Guía clínica de indicadores",a:"guia"},{n:"Recursos oficiales",a:"rec"}]}];
 const AUTO=["huesos","musculos","organos"],RLS=["huesos","musculos","organos"],ANCH=["hz","guia","rec"];
 const RM=()=>matchMedia("(prefers-reduced-motion: reduce)").matches;
 const Nav={tree:[],leaves:[],ex:new Set(["panel"]),exFor:"",cs:"",mh:"",cur:null,sig:"",ca:"",q:0,
@@ -529,7 +529,7 @@ on(l){if(l.t!==S.tab)return false;if(l.z)return l.z===S.sel[layer()];if(l.x&&"cm
 menu(){const cur=MENU.find(g=>g.tab===S.tab);if(cur&&this.exFor!==S.tab){this.ex.add(cur.id);this.exFor=S.tab}
  this.leaves=[];const h=this.tree.map(g=>{let w=-1;const items=g.ks.map(l=>{const i=this.leaves.push(l)-1,z=l.z&&ZONES.find(q=>q.id===l.z),s=z?Engine.ev(z).st:-1,on=this.on(l);if(s>=0&&s<3)w=Math.max(w,s);
   return`<li><button class="nl ${on?"on":""}" data-nav="${i}"${on?' aria-current="page"':""}><span>${l.n}</span>${s>=0?`<i class="t${s}" title="${SN[s]}">●</i>`:""}</button></li>`}).join(""),o=this.ex.has(g.id);
-  return`<section class="ng ${o?"open":""} ${g.tab===S.tab?"cur":""}"><button class="ngh" data-ng="${g.id}" aria-expanded="${o}"><span>${g.ic}</span><b>${g.n}</b>${w>=0?`<i class="t${w}">●</i>`:""}<em>›</em></button><ul>${items}</ul></section>`}).join("");
+  return`<section class="ng ${o?"open":""} ${g.tab===S.tab?"cur":""}"><button class="ngh" data-ng="${g.id}" aria-expanded="${o}">${g.ic?`<span>${g.ic}</span>`:""}<b>${g.n}</b>${w>=0?`<i class="t${w}">●</i>`:""}<em>›</em></button><ul>${items}</ul></section>`}).join("");
  if(h!==this.mh){$("nav").innerHTML=h;this.mh=h}},
 /* ---- drawer ---- */
 get isOpen(){return $("drawer").classList.contains("open")},
@@ -546,6 +546,10 @@ start(){this.tree=this.build();$("drawer").setAttribute("inert","");
  addEventListener("touchend",e=>{if(x0!=null&&this.isOpen&&e.changedTouches[0].clientX-x0<-70)this.close();x0=null},{passive:true});
  addEventListener("hashchange",()=>{if(location.hash!=="#"+this.hash())this.fromHash()});
  if(!this.fromHash())this.flush()}};
+Nav.start();
+
+</script>
+</body></html>
 Nav.start();
 
 </script>
