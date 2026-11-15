@@ -10,8 +10,9 @@ const cleanV=v=>{const o={};Object.entries(v||{}).forEach(([k,x])=>{if(typeof x=
 const S={crew:"c1",env:"iss",day:30,today:loadToday(),tab:"panel",sel:{},par:{},cat:"all",cmp:0,rl:"huesos",cc:{}};
 CREW.forEach(c=>S.cc[c.id]={adh:40,vas:3});
 const cfg=(id=S.crew)=>S.cc[id],crewOf=(id=S.crew)=>CREW.find(x=>x.id===id),layer=()=>S.tab==="registro"?S.rl:S.tab;
-const stat=(p,v)=>p.dir==="none"?-1:p.dir==="lt"?(v<=p.r?2:v<=p.y?1:0):(v>=p.r?2:v>=p.y?1:0);
-const sev=(p,v)=>{const q=p.r-p.base;return q?clamp((v-p.base)/q,0,1):0};
+const out=(p,v)=>(p.mx!=null&&v>p.mx)||(p.mn!=null&&v<p.mn);
+const stat=(p,v)=>p.dir==="none"?-1:out(p,v)?2:p.dir==="lt"?(v<=p.r?2:v<=p.y?1:0):(v>=p.r?2:v>=p.y?1:0);
+const sev=(p,v)=>{if(p.dir!=="none"&&out(p,v))return 1;const q=p.r-p.base;return q?clamp((v-p.base)/q,0,1):0};
 const C=(day=S.day,cr=crewOf())=>{const e=ENVS[S.env],k=cfg(cr.id);return{d:day,m:day/30*cr.sens,f:1-.6*k.adh/100,k:e.k,fk:e.fk,gz:e.gz,adh:k.adh/100,vas:k.vas}};
 const refText=p=>p.dir==="none"?"Sin umbral definido":`Base ${fmt(p,p.base)} · Precaución ${p.dir==="lt"?"≤":"≥"} ${fmt(p,p.y)} · Alerta ${p.dir==="lt"?"≤":"≥"} ${fmt(p,p.r)}`;
 const SC=["#2ee6a6","#ffb547","#ff6b6b","#6d788f"];
